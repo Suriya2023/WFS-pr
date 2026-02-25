@@ -44,7 +44,12 @@ try {
     $items = json_encode($input['items'] ?? []);
     $status = $input['status'] ?? 'draft';
 
+    $pickup_id = $input['pickupAddressId'] ?? null;
+    if ($pickup_id === '')
+        $pickup_id = null;
+
     $sql = "UPDATE shipments SET 
+            pickup_address_id = ?,
             consignee_name = ?, 
             consignee_phone = ?, 
             consignee_address = ?, 
@@ -79,6 +84,7 @@ try {
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
+        $pickup_id,
         $name,
         $phone,
         $address,

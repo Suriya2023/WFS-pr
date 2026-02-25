@@ -10,10 +10,10 @@ function Contact() {
         <ContactPricing />
       </div>
       <BranchOffices />
-      <FaqWithMap/>
+      <FaqWithMap />
 
 
-      
+
     </div>
   )
 }

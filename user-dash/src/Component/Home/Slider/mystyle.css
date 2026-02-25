@@ -1,10 +1,79 @@
-/* Hide scrollbar for Chrome, Safari, Edge */
-.partner-scroll::-webkit-scrollbar {
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(calc(-250px * 9))
+  }
+}
+
+.partner-slider-container {
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.partner-track {
+  display: flex;
+  width: calc(250px * 18);
+  animation: scroll 40s linear infinite;
+}
+
+.partner-track:hover {
+  animation-play-state: paused;
+}
+
+.partner-slide {
+  width: 250px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  transition: all 0.4s ease;
+}
+
+.partner-slide img {
+  filter: grayscale(100%) opacity(0.6);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  max-height: 50px;
+}
+
+.partner-slide:hover img {
+  filter: grayscale(0%) opacity(1);
+  transform: scale(1.1);
+}
+
+.partner-scroll-hide::-webkit-scrollbar {
   display: none;
 }
 
-/* Hide scrollbar for Firefox & IE */
-.partner-scroll {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+.glass-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #1a237e 0%, #d32f2f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@keyframes bounce-slow {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 4s ease-in-out infinite;
 }

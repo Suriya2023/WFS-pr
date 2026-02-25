@@ -1,81 +1,91 @@
-import React, { useRef } from "react";
-import SliderArrow from "./SliderArrow";
+import React from "react";
 import "./mystyle.css";
 
-import Group1 from "../../../assets/Uploads/Group-1.webp";
-import Group2 from "../../../assets/Uploads/Group-2.webp";
-import Group3 from "../../../assets/Uploads/Group-3.webp";
-import Group4 from "../../../assets/Uploads/Group-4.webp";
-import Group5 from "../../../assets/Uploads/Group-5.webp";
-import Group6 from "../../../assets/Uploads/Group-6.webp";
-import Group7 from "../../../assets/Uploads/Group-7.webp";
-import Group8 from "../../../assets/Uploads/Group-8.webp";
-import Group9 from "../../../assets/Uploads/Group-9.webp";
+// Carrier Logos (Assuming these are the courier partners)
+import Delhivery from "../../../assets/Uploads/Group-1.webp";
+import Bluedart from "../../../assets/Uploads/Group-2.webp";
+import EcomExpress from "../../../assets/Uploads/Group-3.webp";
+import XpressBees from "../../../assets/Uploads/Group-4.webp";
+import Shadowfax from "../../../assets/Uploads/Group-5.webp";
+import Amazon from "../../../assets/Uploads/Group-6.webp";
+import DHL from "../../../assets/Uploads/Group-7.webp";
+import FedEx from "../../../assets/Uploads/Group-8.webp";
+import Aramex from "../../../assets/Uploads/Group-9.webp";
 
 export default function PartnerSlider() {
-  const sliderRef = useRef(null);
-
-  const scrollLeft = () => {
-    sliderRef.current.scrollBy({ left: -400, behavior: "smooth" });
-  };
-
-  const scrollRight = () => {
-    sliderRef.current.scrollBy({ left: 400, behavior: "smooth" });
-  };
-
-  const logos = [
-    Group1,
-    Group2,
-    Group3,
-    Group4,
-    Group5,
-    Group6,
-    Group7,
-    Group8,
-    Group9,
+  const carriers = [
+    { logo: Delhivery, name: "Delhivery" },
+    { logo: Bluedart, name: "Blue Dart" },
+    { logo: EcomExpress, name: "Ecom Express" },
+    { logo: XpressBees, name: "XpressBees" },
+    { logo: Shadowfax, name: "Shadowfax" },
+    { logo: Amazon, name: "Amazon Shipping" },
+    { logo: DHL, name: "DHL" },
+    { logo: FedEx, name: "FedEx" },
+    { logo: Aramex, name: "Aramex" },
   ];
+
+  // Double the array for infinite scroll effect
+  const extendedCarriers = [...carriers, ...carriers];
 
   return (
     <section
       id="partner-slider"
-      className="relative bg-white py-16 overflow-hidden"
+      className="relative bg-slate-50 py-12 lg:py-24 overflow-hidden border-y border-slate-100"
     >
-      {/* subtle brand background */}
-      <div className="absolute -top-24 -left-24 w-80 h-80 bg-yellow-200 rounded-full blur-3xl opacity-40" />
-      <div className="absolute -bottom-24 -right-24 w-80 h-80 bg-red-200 rounded-full blur-3xl opacity-30" />
+      {/* Background Decor */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-50 rounded-full blur-[120px] opacity-60 -translate-y-1/2 translate-x-1/2" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-red-50 rounded-full blur-[100px] opacity-40 translate-y-1/2 -translate-x-1/2" />
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="text-center text-4xl sm:text-5xl font-black text-gray-900 mb-12 uppercase tracking-tighter">
-          We help our partners grow{" "}
-          <span className="text-red-600 block sm:inline">globally</span>
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-16">
+        <span className="inline-block py-1 px-4 mb-4 text-xs font-bold tracking-widest text-red-600 uppercase bg-red-50 rounded-full border border-red-100">
+          Global Logistics Network
+        </span>
+        <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 mb-6 tracking-tight">
+          BGL Express <span className="text-blue-600">Powering</span> Your <br className="hidden md:block" />
+          Shipments Globally
         </h2>
+        <p className="max-w-2xl mx-auto text-lg text-slate-600 font-medium">
+          Whether it&apos;s domestic speed or international reach, our deep integration with leading
+          carriers ensures your parcels reach every corner of the world.
+        </p>
+      </div>
 
-        {/* Left Arrow */}
-        <SliderArrow direction="left" onClick={scrollLeft} />
-
-        {/* Slider */}
-        <div
-          ref={sliderRef}
-          className="flex gap-14 overflow-x-auto scroll-smooth px-14 partner-scroll"
-        >
-          {logos.map((logo, index) => (
+      <div className="partner-slider-container">
+        <div className="partner-track">
+          {extendedCarriers.map((carrier, index) => (
             <div
               key={index}
-              className="min-w-[160px] flex justify-center items-center"
+              className="partner-slide"
+              title={carrier.name}
             >
-              <img
-                src={logo}
-                alt="partner logo"
-                loading="lazy"
-                decoding="async"
-                className="h-16 lg:h-20 object-contain opacity-80 hover:opacity-100 transition duration-300"
-              />
+              <div className="group relative w-full h-24 flex items-center justify-center p-6 bg-white/50 hover:bg-white rounded-2xl border border-transparent hover:border-slate-200 transition-all duration-300 shadow-sm hover:shadow-xl">
+                <img
+                  src={carrier.logo}
+                  alt={`${carrier.name} logo`}
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-full object-contain grayscale group-hover:grayscale-0 transition-all duration-500"
+                />
+              </div>
             </div>
           ))}
         </div>
+      </div>
 
-        {/* Right Arrow */}
-        <SliderArrow direction="right" onClick={scrollRight} />
+      <div className="mt-12 flex justify-center gap-12 text-slate-400 font-bold text-sm uppercase tracking-[0.2em] opacity-80">
+        <div className="flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+          50+ Global Carriers
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+          220+ Countries
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+          Instant Tracking
+        </div>
       </div>
     </section>
   );

@@ -14,138 +14,117 @@ function mainDash({ setActiveRoute, setOrdersTab, stats }) {
     const [showKYCForm, setShowKYCForm] = React.useState(false);
 
     return (
-        <div className="p-6 lg:p-12 min-h-screen bg-[#FCF8F8] animate-in fade-in duration-700">
-            {showKYCForm && (
-                <KYCForm
-                    onClose={() => setShowKYCForm(false)}
-                    onSuccess={() => {
-                        setShowKYCForm(false);
-                    }}
-                />
-            )}
+        <div className="p-8 lg:p-12 min-h-screen bg-[#F4F6F8]">
+            <div className="max-w-[1500px] mx-auto space-y-10">
 
-            <div className="max-w-[1600px] mx-auto space-y-10">
-                {/* KYC Header Status */}
-                <div className={`rounded-[32px] p-8 sm:p-10 flex flex-col md:flex-row items-center justify-between gap-8 shadow-sm border transition-all duration-500 ${stats?.user?.kycStatus === 'verified'
-                    ? 'bg-white border-green-100 hover:shadow-xl hover:shadow-green-500/5'
-                    : stats?.user?.kycStatus === 'pending'
-                        ? 'bg-blue-50/50 border-blue-200'
-                        : 'bg-white border-red-100 hover:shadow-xl hover:shadow-red-500/5'
-                    }`}>
-                    <div className="flex items-center gap-6">
-                        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 shadow-inner ${stats?.user?.kycStatus === 'verified' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600 animate-pulse'
-                            }`}>
-                            {stats?.user?.kycStatus === 'verified' ? <CheckCircle className="w-8 h-8" /> : <AlertTriangle className="w-8 h-8" />}
-                        </div>
-                        <div>
-                            <h2 className="text-2xl sm:text-3xl font-black text-gray-950 tracking-tight">System Access Status</h2>
-                            <p className="text-gray-500 font-medium mt-1">
-                                {stats?.user?.kycStatus === 'verified'
-                                    ? "Protocols verified. Your account is fully operational."
-                                    : stats?.user?.kycStatus === 'pending'
-                                        ? "Security audit in progress. Estimated time: 2-4 hours."
-                                        : "KYC credentials required to unlock dispatch modules."}
-                            </p>
-                        </div>
-                    </div>
+                {/* ===== WELCOME SECTION ===== */}
+                <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-8 flex flex-col lg:flex-row justify-between gap-10">
+
                     <div>
-                        {stats?.user?.kycStatus === 'verified' ? (
-                            <div className="px-8 py-3 bg-green-50 text-green-700 border border-green-200 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-2">
-                                VERIFIED <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+                        <h2 className="text-3xl font-bold text-gray-900 mb-3">
+                            Welcome {stats?.user?.name}
+                        </h2>
+
+                        <p className="text-gray-600 mb-6">
+                            Manage your shipping access, KYC status and domestic & international deliveries.
+                        </p>
+
+                        <div className="flex gap-4 flex-wrap">
+                            <div className="px-4 py-2 bg-gray-100 rounded-xl text-sm font-semibold">
+                                DOMESTIC
+                                <span className="ml-2 px-2 py-1 bg-green-100 text-green-600 rounded-full text-xs">
+                                    Verified
+                                </span>
                             </div>
-                        ) : (
-                            <button
-                                onClick={() => setShowKYCForm(true)}
-                                className="px-10 py-4 bg-[#E31E24] text-white rounded-2xl hover:bg-red-700 text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-red-200 transition-all transform active:scale-95"
-                            >
-                                {stats?.user?.kycStatus === 'pending' ? "Check Audit Status" : "INITIATE KYC PROTOCOL"}
-                            </button>
-                        )}
+
+                            <div className="px-4 py-2 bg-gray-100 rounded-xl text-sm font-semibold">
+                                INTERNATIONAL
+                                <span className="ml-2 px-2 py-1 bg-green-100 text-green-600 rounded-full text-xs">
+                                    Verified
+                                </span>
+                            </div>
+                        </div>
+
+                        <p className="text-green-600 text-sm font-medium mt-4">
+                            Your account is fully verified and ready for global shipping.
+                        </p>
+                    </div>
+
+                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 w-full lg:w-[320px]">
+                        <h4 className="font-semibold text-gray-800 mb-2">Account Status</h4>
+                        <p className="text-gray-500 text-sm mb-5">
+                            Complete verification to begin shipping orders.
+                        </p>
+
+                        <button
+                            onClick={() => setActiveRoute('settings')}
+                            className="w-full bg-white border border-gray-300 py-2 rounded-lg font-medium hover:bg-gray-100 transition"
+                        >
+                            View Settings
+                        </button>
+                    </div>
+
+                </div>
+
+                {/* ===== OVERVIEW ===== */}
+                <div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-6">
+                        Overview
+                    </h3>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <DashboardStatCard icon={<Package />} label="All Orders" count={orders.total || 0} color="blue" onClick={() => handleStatsClick('all')} />
+                        <DashboardStatCard icon={<FileText />} label="Drafted" count={orders.draft || 0} color="orange" onClick={() => handleStatsClick('draft')} />
+                        <DashboardStatCard icon={<CheckCircle />} label="Ready" count={orders.ready || 0} color="green" onClick={() => handleStatsClick('ready')} />
+                        <DashboardStatCard icon={<Package />} label="Packed" count={orders.packed || 0} color="red" onClick={() => handleStatsClick('packed')} />
                     </div>
                 </div>
 
-                {/* Stats Matrix */}
-                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-6">
-                    <DashboardStatCard icon={<Package className="text-blue-600" />} label="Total Inventory" count={orders.total || 0} color="blue" onClick={() => handleStatsClick('all')} />
-                    <DashboardStatCard icon={<FileText className="text-orange-600" />} label="Hold/Drafts" count={orders.draft || 0} color="orange" onClick={() => handleStatsClick('draft')} />
-                    <DashboardStatCard icon={<CheckCircle className="text-emerald-600" />} label="Confirmed" count={orders.ready || 0} color="green" onClick={() => handleStatsClick('ready')} />
-                    <DashboardStatCard icon={<Package className="text-red-500" />} label="Packed & Sec" count={orders.packed || 0} color="red" onClick={() => handleStatsClick('packed')} />
-                    <DashboardStatCard icon={<TrendingUp className="text-purple-600" />} label="In Transit" count={orders.dispatched || 0} color="purple" onClick={() => handleStatsClick('dispatched')} />
-                </div>
-
+                {/* ===== ACTION + WALLET ===== */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                    <div className="lg:col-span-2 space-y-8">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-xl font-black text-gray-950 tracking-tight flex items-center gap-3">
-                                <span className="w-1.5 h-8 bg-[#E31E24] rounded-full" /> Operational Modules
-                            </h3>
-                            <button onClick={() => setActiveRoute('orders')} className="text-[10px] font-black text-[#E31E24] uppercase tracking-[0.3em] hover:underline">View Intelligence Hub</button>
-                        </div>
+
+                    {/* LEFT */}
+                    <div className="lg:col-span-2 space-y-6">
+                        <h3 className="text-lg font-semibold text-gray-800">
+                            Action Required
+                        </h3>
+
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                            <ActionBoxSimple icon={<Truck className="w-6 h-6" />} label="Manage Pickups" count={orders.manifested || 0} onClick={() => handleStatsClick('manifested')} />
-                            <ActionBoxSimple icon={<FileText className="w-6 h-6" />} label="View Manifests" count={orders.manifested || 0} onClick={() => setActiveRoute('manifests')} />
-                            <ActionBoxSimple icon={<AlertTriangle className="w-6 h-6 text-red-500" />} label="Active Disputes" count={orders.disputed || 0} onClick={() => handleStatsClick('disputed')} />
+                            <ActionBoxSimple icon={<Truck />} label="Scheduled Pickups" count={orders.manifested || 0} onClick={() => handleStatsClick('manifested')} />
+                            <ActionBoxSimple icon={<FileText />} label="Active Manifests" count={orders.manifested || 0} onClick={() => setActiveRoute('manifests')} />
+                            <ActionBoxSimple icon={<AlertTriangle />} label="Disputes / RTO" count={orders.disputed || 0} onClick={() => handleStatsClick('disputed')} />
                         </div>
                     </div>
 
-                    {/* Wallet Section */}
+                    {/* RIGHT WALLET */}
                     <div>
-                        <div className="flex items-center gap-3 mb-8">
-                            <span className="w-1.5 h-8 bg-amber-400 rounded-full" />
-                            <h3 className="text-xl font-black text-gray-950 tracking-tight">Wallet Analytics</h3>
-                        </div>
-                        <div className="bg-white rounded-[40px] border border-gray-100 p-8 shadow-sm hover:shadow-2xl transition-all duration-700 group">
-                            <div className="flex justify-between items-center mb-10">
-                                <div>
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Liquid Balance</p>
-                                    <p className="text-5xl font-black text-gray-950 tracking-tighter">₹{Math.round(walletBalance).toLocaleString('en-IN')}</p>
-                                </div>
-                                <div className="w-16 h-16 bg-amber-50 rounded-[24px] flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">
-                                    <Wallet className="w-8 h-8 text-amber-500" />
-                                </div>
-                            </div>
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                            Wallet
+                        </h3>
 
-                            <div className="space-y-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar mb-10">
-                                {stats?.walletActivity && stats.walletActivity.length > 0 ? (
-                                    stats.walletActivity.map((txn, index) => (
-                                        <div key={txn._id || index} className="flex gap-4 relative">
-                                            <div className={`w-3.5 h-3.5 rounded-full ${txn.type === 'credit' ? 'bg-emerald-500' : 'bg-[#E31E24]'} mt-1.5 shrink-0 z-10 border-2 border-white shadow-sm`}></div>
-                                            <div className="flex-1 pb-6 group-last:pb-0 border-b border-gray-50 last:border-none">
-                                                <div className="flex justify-between items-start">
-                                                    <div>
-                                                        <p className="text-sm font-bold text-gray-900 leading-none mb-1.5 uppercase tracking-tight">
-                                                            {txn.description || (txn.type === 'credit' ? 'Recharge' : 'Deduction')}
-                                                        </p>
-                                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                                                            {new Date(txn.createdAt).toLocaleDateString('en-GB')} • {new Date(txn.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                        </p>
-                                                    </div>
-                                                    <span className={`text-sm font-black tracking-tight ${txn.type === 'credit' ? 'text-emerald-600' : 'text-[#E31E24]'}`}>
-                                                        {txn.type === 'credit' ? '+' : '-'}₹{Math.round(txn.amount).toLocaleString()}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="text-center py-10">
-                                        <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3 opacity-40">
-                                            <Clock className="w-6 h-6 text-gray-400" />
-                                        </div>
-                                        <p className="text-xs font-bold text-gray-300 uppercase tracking-[0.2em]">No Recent Activity</p>
-                                    </div>
-                                )}
-                            </div>
+                        <div className="rounded-3xl p-8 bg-gradient-to-br from-[#0F172A] to-[#1E293B] text-white shadow-xl">
+                            <p className="text-xs uppercase tracking-widest text-gray-400 mb-2">
+                                Available Balance
+                            </p>
 
-                            <button onClick={() => setActiveRoute('wallet')} className="w-full py-5 bg-[#FFD700] text-[#E31E24] rounded-2xl hover:bg-yellow-400 font-black text-xs uppercase tracking-[0.2em] transition-all transform active:scale-95 shadow-xl shadow-yellow-100 flex items-center justify-center gap-3">
-                                <Plus className="w-5 h-5 stroke-[3px]" /> RECHARGE PROTOCOL
+                            <h2 className="text-4xl font-bold mb-6">
+                                ₹{Math.round(walletBalance).toLocaleString('en-IN')}
+                            </h2>
+
+                            <button
+                                onClick={() => setActiveRoute('wallet')}
+                                className="w-full bg-white text-gray-900 py-3 rounded-xl font-semibold hover:bg-gray-200 transition"
+                            >
+                                Recharge Wallet
                             </button>
                         </div>
                     </div>
+
                 </div>
+
             </div>
         </div>
-    )
+    );
 }
 
 const DashboardStatCard = ({ icon, label, count, color, onClick }) => {

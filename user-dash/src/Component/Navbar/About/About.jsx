@@ -11,7 +11,7 @@ function About() {
       <FactsSection />
       <FeaturesSection />
       <StatsSection />
-      <AboutSection/>
+      <AboutSection />
     </div>
   )
 }

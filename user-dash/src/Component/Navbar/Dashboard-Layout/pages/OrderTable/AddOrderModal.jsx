@@ -21,6 +21,7 @@ function AddOrderModal({ onClose, onSuccess, setActiveRoute, user, editOrder, ad
     const [loadingLater, setLoadingLater] = useState(false);
     const [selectedGateway, setSelectedGateway] = useState('razorpay');
     const [gatewayStatus, setGatewayStatus] = useState(null);
+    const [userRole, setUserRole] = useState('user');
     const isSubmittingRef = useRef(false);
     const razorpayLoaded = useRef(false);
     const loadingFromAutoFill = useRef(false);
@@ -76,41 +77,69 @@ function AddOrderModal({ onClose, onSuccess, setActiveRoute, user, editOrder, ad
         setPickupStates(initialStates);
     }, []);
 
+    // Use an effect that depends on both editOrder AND addresses to decide pickup mode
     useEffect(() => {
         if (editOrder) {
             console.log('Edit Order Initializing:', editOrder);
 
-            // Handle consignee full name split (crude but works for now)
-            const nameParts = (editOrder.consignee_name || '').split(' ');
+            // Handle consignee full name split
+            const nameParts = (editOrder.consignee_name || editOrder.receiver_name || '').split(' ');
             const firstName = nameParts[0] || '';
             const lastName = nameParts.slice(1).join(' ') || '';
 
+            const items = Array.isArray(editOrder.items) ? editOrder.items :
+                (typeof editOrder.items === 'string' ? JSON.parse(editOrder.items || '[]') : []);
+
+            // Check if we should show manual pickup address
+            // Use manual if: no ID, OR it's an admin (who doesn't have the user's saved addresses), 
+            // OR the ID simply isn't found in the current address list.
+            const hasId = !!editOrder.pickup_address_id;
+            const idInList = addresses.some(a => String(a.id) === String(editOrder.pickup_address_id));
+            const shouldShowManual = !hasId || (userRole === 'admin' && !idInList) || (!idInList && addresses.length > 0);
+
+            // Exhaustive Fallbacks for Receiver
+            const mobile = editOrder.consignee_phone || editOrder.receiver_mobile || editOrder.mobile || editOrder.phone || '';
+            const email = editOrder.consignee_email || editOrder.receiver_email || editOrder.creator_email || editOrder.email || '';
+            const addr1 = editOrder.consignee_address || editOrder.receiver_address || editOrder.address1 || editOrder.address || '';
+            const city = editOrder.consignee_city || editOrder.receiver_city || editOrder.city || '';
+            const state = editOrder.consignee_state || editOrder.receiver_state || editOrder.state || '';
+            const pincode = editOrder.consignee_pincode || editOrder.receiver_pincode || editOrder.pincode || editOrder.zip || '';
+
             setFormData(prev => ({
                 ...prev,
-                pickupAddressId: editOrder.pickup_address_id || '',
+                pickupAddressId: editOrder.pickup_address_id ? String(editOrder.pickup_address_id) : '',
+                isNewPickupAddress: shouldShowManual,
+                newPickupAddress: {
+                    name: editOrder.pickup_name || editOrder.sender_name || '',
+                    mobile: editOrder.pickup_phone || editOrder.sender_phone || '',
+                    address1: editOrder.pickup_address || editOrder.sender_address || '',
+                    city: editOrder.pickup_city || editOrder.sender_city || '',
+                    state: editOrder.pickup_state || editOrder.sender_state || '',
+                    pincode: editOrder.pickup_pincode || editOrder.sender_pincode || ''
+                },
                 firstName: firstName,
                 lastName: lastName,
-                mobileNumber: editOrder.consignee_phone || editOrder.receiver_mobile || '',
-                email: editOrder.consignee_email || editOrder.creator_email || '',
-                address1: editOrder.consignee_address || editOrder.receiver_address || '',
-                city: editOrder.consignee_city || '',
-                state: editOrder.consignee_state || '',
-                pincode: editOrder.consignee_pincode || '',
+                mobileNumber: mobile,
+                email: email,
+                country: editOrder.destination_country || editOrder.country || 'IN',
+                address1: addr1,
+                city: city,
+                state: state,
+                pincode: pincode,
                 paymentMode: editOrder.paymentMode || editOrder.payment_mode || 'Prepaid',
                 serviceType: editOrder.serviceType || editOrder.courierPartner || 'Express',
-                items: Array.isArray(editOrder.items) ? editOrder.items :
-                    (typeof editOrder.items === 'string' ? JSON.parse(editOrder.items) : [])
+                items: items
             }));
 
             if (editOrder.courierPartner || editOrder.shippingCost) {
                 setSelectedRate({
                     tierName: editOrder.courierPartner || 'Express',
-                    estimatedCost: editOrder.shippingCost || 0,
-                    price: editOrder.shippingCost || 0
+                    estimatedCost: parseFloat(editOrder.shippingCost || 0),
+                    price: parseFloat(editOrder.shippingCost || 0)
                 });
             }
         }
-    }, [editOrder]);
+    }, [editOrder, addresses, userRole]);
 
     const initData = async () => {
         try {
@@ -133,10 +162,12 @@ function AddOrderModal({ onClose, onSuccess, setActiveRoute, user, editOrder, ad
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (data.success) {
-                const mapped = data.data.map(a => ({ ...a, _id: a.id }));
+                const mapped = data.data.map(a => ({ ...a, _id: String(a.id) }));
                 setAddresses(mapped);
                 const def = mapped.find(a => a.isDefault == 1);
-                if (def && !formData.pickupAddressId && !editOrder) setFormData(prev => ({ ...prev, pickupAddressId: def.id }));
+                if (!editOrder && def && !formData.pickupAddressId) {
+                    setFormData(prev => ({ ...prev, pickupAddressId: String(def.id) }));
+                }
             }
         } catch (e) { }
     };
@@ -162,7 +193,6 @@ function AddOrderModal({ onClose, onSuccess, setActiveRoute, user, editOrder, ad
         } catch (e) { }
     };
 
-    const [userRole, setUserRole] = useState('user');
 
     const fetchUserProfile = async () => {
         try {

@@ -3,21 +3,23 @@ import testimonials from "./Data";
 import TestimonialCard from "./TestimonialCard";
 
 const VISIBLE = 3;
-const SLIDE_HEIGHT = 100;
+const SLIDE_HEIGHT = 140; // Tighter vertical spacing for less gap
 
 const VerticalTestimonials = ({
     auto = true,
-    interval = 2000,
+    interval = 5000,
     pauseOnHover = true,
 }) => {
     const n = testimonials.length;
     const [index, setIndex] = useState(0);
+    const [isScrolling, setIsScrolling] = useState(false);
     const timerRef = useRef(null);
+    const scrollTimeoutRef = useRef(null);
 
     useEffect(() => {
         if (auto) startTimer();
         return () => stopTimer();
-    }, []); // ⬅ removed index dependency (main fix)
+    }, [auto, index]);
 
     const startTimer = () => {
         stopTimer();
@@ -31,63 +33,76 @@ const VerticalTestimonials = ({
     };
 
     const goPrev = () => {
-        stopTimer();
         setIndex((prev) => (prev - 1 + n) % n);
-        if (auto) startTimer();
     };
 
     const goNext = () => {
-        stopTimer();
         setIndex((prev) => (prev + 1) % n);
-        if (auto) startTimer();
+    };
+
+    const handleWheel = (e) => {
+        if (isScrolling) return;
+
+        if (Math.abs(e.deltaY) > 10) {
+            setIsScrolling(true);
+            if (e.deltaY > 0) {
+                goNext();
+            } else {
+                goPrev();
+            }
+
+            if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+            scrollTimeoutRef.current = setTimeout(() => {
+                setIsScrolling(false);
+            }, 800);
+        }
     };
 
     return (
         <div className="w-full">
             <div
-                className="relative w-full h-[420px] md:h-[360px] lg:h-[420px] overflow-hidden"
+                className="relative w-full h-[450px] md:h-[500px] lg:h-[520px] overflow-hidden px-4 cursor-ns-resize"
                 onMouseEnter={() => pauseOnHover && stopTimer()}
                 onMouseLeave={() => pauseOnHover && auto && startTimer()}
+                onWheel={handleWheel}
             >
-                {testimonials.map((item, i) => {
-                    const offset = (i - index + n) % n;
-                    const visible = offset < VISIBLE;
+                <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white to-transparent z-20 pointer-events-none" />
+                <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white to-transparent z-20 pointer-events-none" />
 
-                    return (
-                        <div
-                            key={item.id}
-                            style={{
-                                transform: `translateY(${offset * SLIDE_HEIGHT}%)`,
-                                opacity: visible ? 1 : 0,
-                                zIndex: visible ? 10 - offset : -1,
-                                transition: "transform 900ms cubic-bezier(.25,.85,.25,1)",
-                            }}
-                            className="absolute left-1/2 -translate-x-1/2 w-full flex justify-center"
-                        >
-                            <div className="w-[92%] md:w-[82%] lg:w-[74%]">
-                                <TestimonialCard item={item} />
+                <div className="relative pt-4 md:pt-6">
+                    {testimonials.map((item, i) => {
+                        const offset = (i - index + n) % n;
+                        const visible = offset < VISIBLE;
+
+                        return (
+                            <div
+                                key={`${item.id}-${i}`}
+                                style={{
+                                    transform: `translateY(${offset * SLIDE_HEIGHT}px) scale(${visible ? 1 - (offset * 0.08) : 0.7})`,
+                                    opacity: visible ? 1 - (offset * 0.45) : 0,
+                                    zIndex: visible ? 10 - offset : -1,
+                                    transition: "all 1000ms cubic-bezier(0.16, 1, 0.3, 1)",
+                                    filter: offset > 0 ? `blur(${offset * 1}px)` : 'none',
+                                }}
+                                className="absolute left-0 right-0 w-full flex justify-center py-2"
+                            >
+                                <div className="w-full max-w-2xl px-2">
+                                    <TestimonialCard item={item} />
+                                </div>
                             </div>
-                        </div>
-                    );
-                })}
-
-                {/* Up/Down Buttons */}
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-3">
-                    <button
-                        onClick={goPrev}
-                        className="bg-white/95 text-slate-800 p-2 rounded-full shadow hover:scale-110 transition"
-                    >
-                        ▲
-                    </button>
-                    <button
-                        onClick={goNext}
-                        className="bg-white/95 text-slate-800 p-2 rounded-full shadow hover:scale-110 transition"
-                    >
-                        ▼
-                    </button>
+                        );
+                    })}
                 </div>
 
-                {/* Removed dots: No UI, no click handler, no interference */}
+                {/* Vertical Progress Indicator */}
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-30 mr-2 md:mr-6">
+                    {testimonials.map((_, i) => (
+                        <div
+                            key={i}
+                            className={`w-1 shadow-sm transition-all duration-700 rounded-full ${index === i ? "h-12 bg-red-600" : "h-4 bg-slate-200"}`}
+                        />
+                    ))}
+                </div>
             </div>
         </div>
     );

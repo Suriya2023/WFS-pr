@@ -19,7 +19,7 @@ import {
     Mail
 } from 'lucide-react';
 import axios from 'axios';
-import bglLogo from '../../../../assets/bglLogos.png';
+import bglLogo from '../../../../assets/bglLogo.png';
 
 const Sidebar = ({ isOpen, toggleSidebar, activeRoute, setActiveRoute }) => {
     const [unreadCount, setUnreadCount] = useState(0);
