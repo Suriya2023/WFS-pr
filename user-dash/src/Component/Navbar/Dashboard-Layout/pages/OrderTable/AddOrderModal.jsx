@@ -162,14 +162,19 @@ function AddOrderModal({ onClose, onSuccess, setActiveRoute, user, editOrder, ad
         } catch (e) { }
     };
 
+    const [userRole, setUserRole] = useState('user');
+
     const fetchUserProfile = async () => {
         try {
             const token = localStorage.getItem('token');
             const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/user/profile`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            if (data && !editOrder) {
-                setFormData(prev => ({ ...prev, firstName: data.firstname || '', lastName: data.lastname || '', mobileNumber: data.mobile || '', email: data.email || '' }));
+            if (data) {
+                if (data.role) setUserRole(data.role);
+                if (!editOrder) {
+                    setFormData(prev => ({ ...prev, firstName: data.firstname || '', lastName: data.lastname || '', mobileNumber: data.mobile || '', email: data.email || '' }));
+                }
             }
         } catch (e) { }
     };
@@ -459,7 +464,7 @@ function AddOrderModal({ onClose, onSuccess, setActiveRoute, user, editOrder, ad
                             <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
                             <p className="text-slate-400 font-semibold uppercase tracking-widest text-[10px]">Verifying Security Access...</p>
                         </div>
-                    ) : kycAddress?.status !== 'verified' ? (
+                    ) : (kycAddress?.status !== 'verified' && userRole !== 'admin') ? (
                         <div className="max-w-2xl mx-auto p-12 text-center space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="w-24 h-24 bg-red-50 text-red-600 rounded-[32px] flex items-center justify-center mx-auto shadow-inner">
                                 <ShieldAlert className="w-12 h-12" />
@@ -472,10 +477,10 @@ function AddOrderModal({ onClose, onSuccess, setActiveRoute, user, editOrder, ad
                             </div>
 
                             <div className={`p-6 rounded-3xl border transition-all duration-500 ${kycAddress?.status === 'pending'
-                                    ? 'bg-amber-50 border-amber-100 text-amber-800'
-                                    : kycAddress?.status === 'rejected'
-                                        ? 'bg-red-50 border-red-100 text-red-800'
-                                        : 'bg-blue-50 border-blue-100 text-blue-800'
+                                ? 'bg-amber-50 border-amber-100 text-amber-800'
+                                : kycAddress?.status === 'rejected'
+                                    ? 'bg-red-50 border-red-100 text-red-800'
+                                    : 'bg-blue-50 border-blue-100 text-blue-800'
                                 }`}>
                                 <div className="flex items-center gap-4 text-left">
                                     <Info className="w-6 h-6 shrink-0" />

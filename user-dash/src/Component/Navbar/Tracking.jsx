@@ -33,30 +33,39 @@ function Tracking() {
   }, [tracking, trackingId]);
   */
 
+  useEffect(() => {
+    let interval;
+    if (tracking && !loading) {
+      interval = setInterval(() => {
+        handleTrack(null, tracking.trackingId);
+      }, 30000); // Auto-sync every 30 seconds
+    }
+    return () => clearInterval(interval);
+  }, [tracking, loading]);
+
   const handleTrack = async (e, idOverride = null) => {
     if (e) e.preventDefault();
-    const idToTrack = idOverride || trackingId;
+    const idToTrack = (idOverride || trackingId || '').trim();
 
-    if (!idToTrack.trim()) {
-      setError('Please enter a tracking ID');
+    if (!idToTrack) {
+      if (!idOverride) setError('Please enter a tracking ID');
       return;
     }
 
-    setLoading(true);
+    if (!idOverride) setLoading(true);
     setError(null);
 
     try {
-      // Join the socket room for this tracking ID
-      // socket.emit('join_tracking', idToTrack.trim());
-
-      const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/track/index.php?id=${idToTrack.trim()}`);
+      const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/track/index.php?id=${idToTrack}`);
       setTracking(data);
     } catch (err) {
       console.error('Tracking error:', err);
-      setTracking(null);
-      setError(err.response?.data?.message || 'Tracking ID not found');
+      if (!idOverride) {
+        setTracking(null);
+        setError(err.response?.data?.message || 'Tracking ID not found');
+      }
     } finally {
-      setLoading(false);
+      if (!idOverride) setLoading(false);
     }
   };
 
@@ -73,11 +82,12 @@ function Tracking() {
       ready: 'bg-blue-100 text-blue-800',
       packed: 'bg-purple-100 text-purple-800',
       manifested: 'bg-yellow-100 text-yellow-800',
+      picked_up: 'bg-indigo-100 text-indigo-800',
       dispatched: 'bg-orange-100 text-orange-800',
       received: 'bg-green-100 text-green-800',
       cancelled: 'bg-red-100 text-red-800'
     };
-    return colors[status] || colors.draft;
+    return colors[status?.toLowerCase()] || colors.draft;
   };
 
   return (
@@ -167,18 +177,18 @@ function Tracking() {
                   {/* Processing – Verification */}
                   <div className="relative pl-10 border-l-4 border-yellow-50 last:border-0 pb-2">
                     <div className="absolute -left-[14px] top-0 bg-white">
-                      {['ready', 'packed', 'manifested', 'dispatched', 'received'].includes(tracking.status) ? (
+                      {['ready', 'packed', 'manifested', 'picked_up', 'dispatched', 'received'].includes(tracking.status?.toLowerCase()) ? (
                         <CheckCircle className="w-7 h-7 text-green-500" />
                       ) : (
                         <Circle className="w-7 h-7 text-gray-200" />
                       )}
                     </div>
                     <div>
-                      <h4 className={`font-black text-xl tracking-tight uppercase ${['ready', 'packed', 'manifested', 'dispatched', 'received'].includes(tracking.status) ? 'text-gray-900' : 'text-gray-300'}`}>
+                      <h4 className={`font-black text-xl tracking-tight uppercase ${['ready', 'packed', 'manifested', 'picked_up', 'dispatched', 'received'].includes(tracking.status?.toLowerCase()) ? 'text-gray-900' : 'text-gray-300'}`}>
                         Verification
                       </h4>
                       <p className="text-sm text-gray-500 mt-1 font-bold">
-                        {['ready', 'packed', 'manifested', 'dispatched', 'received'].includes(tracking.status)
+                        {['ready', 'packed', 'manifested', 'picked_up', 'dispatched', 'received'].includes(tracking.status?.toLowerCase())
                           ? 'Shipment verified. Preparing shipping label'
                           : 'Your shipment is being verified by our team'}
                       </p>
@@ -188,20 +198,20 @@ function Tracking() {
                   {/* Processing – Label Generating */}
                   <div className="relative pl-10 border-l-4 border-yellow-50 last:border-0 pb-2">
                     <div className="absolute -left-[14px] top-0 bg-white">
-                      {tracking.status === 'packed' ? (
+                      {tracking.status?.toLowerCase() === 'packed' ? (
                         <CheckCircle className="w-7 h-7 text-red-600 animate-pulse" />
-                      ) : ['manifested', 'dispatched', 'received'].includes(tracking.status) ? (
+                      ) : ['manifested', 'picked_up', 'dispatched', 'received'].includes(tracking.status?.toLowerCase()) ? (
                         <CheckCircle className="w-7 h-7 text-green-500" />
                       ) : (
                         <Circle className="w-7 h-7 text-gray-200" />
                       )}
                     </div>
                     <div>
-                      <h4 className={`font-black text-xl tracking-tight uppercase ${tracking.status === 'packed' ? 'text-red-600' : ['manifested', 'dispatched', 'received'].includes(tracking.status) ? 'text-gray-900' : 'text-gray-300'}`}>
+                      <h4 className={`font-black text-xl tracking-tight uppercase ${tracking.status?.toLowerCase() === 'packed' ? 'text-red-600' : ['manifested', 'picked_up', 'dispatched', 'received'].includes(tracking.status?.toLowerCase()) ? 'text-gray-900' : 'text-gray-300'}`}>
                         Label Generating
                       </h4>
                       <p className="text-sm text-gray-500 mt-1 font-bold">
-                        {tracking.status === 'packed' ? 'Shipping label is being generated' : 'Shipping label generated'}
+                        {tracking.status?.toLowerCase() === 'packed' ? 'Shipping label is being generated' : ['manifested', 'picked_up', 'dispatched', 'received'].includes(tracking.status?.toLowerCase()) ? 'Shipping label generated' : 'Pending label generation'}
                       </p>
                     </div>
                   </div>
@@ -209,20 +219,24 @@ function Tracking() {
                   {/* Pickup Scheduled */}
                   <div className="relative pl-10 border-l-4 border-yellow-50 last:border-0 pb-2">
                     <div className="absolute -left-[14px] top-0 bg-white">
-                      {['manifested', 'dispatched', 'received'].includes(tracking.status) ? (
+                      {['picked_up', 'dispatched', 'received'].includes(tracking.status?.toLowerCase()) ? (
                         <CheckCircle className="w-7 h-7 text-green-500" />
+                      ) : tracking.status?.toLowerCase() === 'manifested' ? (
+                        <CheckCircle className="w-7 h-7 text-blue-500 animate-pulse" />
                       ) : (
                         <Circle className="w-7 h-7 text-gray-200" />
                       )}
                     </div>
                     <div>
-                      <h4 className={`font-black text-xl tracking-tight uppercase ${['manifested', 'dispatched', 'received'].includes(tracking.status) ? 'text-gray-900' : 'text-gray-300'}`}>
+                      <h4 className={`font-black text-xl tracking-tight uppercase ${['manifested', 'picked_up', 'dispatched', 'received'].includes(tracking.status?.toLowerCase()) ? 'text-gray-900' : 'text-gray-300'}`}>
                         Pickup Scheduled
                       </h4>
                       <p className="text-sm text-gray-500 mt-1 font-bold">
-                        {['manifested', 'dispatched', 'received'].includes(tracking.status)
+                        {['picked_up', 'dispatched', 'received'].includes(tracking.status?.toLowerCase())
                           ? 'Your parcel has been picked up'
-                          : 'Your parcel is ready for pickup'}
+                          : tracking.status?.toLowerCase() === 'manifested'
+                            ? 'Pickup scheduled / Ready for collection'
+                            : 'Pending pickup scheduling'}
                       </p>
                     </div>
                   </div>
@@ -230,34 +244,38 @@ function Tracking() {
                   {/* In Transit */}
                   <div className="relative pl-10 border-l-4 border-yellow-50 last:border-0 pb-2">
                     <div className="absolute -left-[14px] top-0 bg-white">
-                      {['dispatched', 'received'].includes(tracking.status) ? (
+                      {['dispatched', 'received'].includes(tracking.status?.toLowerCase()) ? (
                         <CheckCircle className="w-7 h-7 text-green-500" />
                       ) : (
                         <Circle className="w-7 h-7 text-gray-200" />
                       )}
                     </div>
                     <div>
-                      <h4 className={`font-black text-xl tracking-tight uppercase ${['dispatched', 'received'].includes(tracking.status) ? 'text-gray-900' : 'text-gray-300'}`}>
+                      <h4 className={`font-black text-xl tracking-tight uppercase ${['dispatched', 'received'].includes(tracking.status?.toLowerCase()) ? 'text-gray-900' : 'text-gray-300'}`}>
                         In Transit
                       </h4>
-                      <p className="text-sm text-gray-500 mt-1 font-bold">Your shipment is in transit</p>
+                      <p className="text-sm text-gray-500 mt-1 font-bold">
+                        {['dispatched', 'received'].includes(tracking.status?.toLowerCase()) ? 'Your shipment is in transit' : 'Awaiting transit start'}
+                      </p>
                     </div>
                   </div>
 
                   {/* Delivered */}
                   <div className="relative pl-10 border-l-4 border-yellow-50 last:border-0">
                     <div className="absolute -left-[14px] top-0 bg-white">
-                      {['received'].includes(tracking.status) ? (
+                      {['received', 'delivered'].includes(tracking.status?.toLowerCase()) ? (
                         <CheckCircle className="w-7 h-7 text-green-500" />
                       ) : (
                         <Circle className="w-7 h-7 text-gray-200" />
                       )}
                     </div>
                     <div>
-                      <h4 className={`font-black text-xl tracking-tight uppercase ${['received'].includes(tracking.status) ? 'text-gray-900' : 'text-gray-300'}`}>
+                      <h4 className={`font-black text-xl tracking-tight uppercase ${['received', 'delivered'].includes(tracking.status?.toLowerCase()) ? 'text-gray-900' : 'text-gray-300'}`}>
                         Delivered
                       </h4>
-                      <p className="text-sm text-gray-500 mt-1 font-bold">Shipment delivered successfully</p>
+                      <p className="text-sm text-gray-500 mt-1 font-bold">
+                        {['received', 'delivered'].includes(tracking.status?.toLowerCase()) ? 'Shipment delivered successfully' : 'Pending delivery'}
+                      </p>
                     </div>
                   </div>
 

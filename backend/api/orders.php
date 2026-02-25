@@ -65,6 +65,23 @@ try {
             'pincode' => $order['pa_pincode'] ?: $order['pickup_pincode'] ?: ''
         ];
 
+        // Fetch History
+        $histStmt = $pdo->prepare("SELECT * FROM shipment_history WHERE shipment_id = ? ORDER BY created_at DESC");
+        $histStmt->execute([$order['id']]);
+        $order['history'] = $histStmt->fetchAll();
+
+        if (empty($order['history'])) {
+            $order['history'] = [
+                [
+                    'id' => 0,
+                    'status' => $order['status'],
+                    'location' => 'BGL System',
+                    'remark' => 'Order recognized by network.',
+                    'created_at' => $order['created_at']
+                ]
+            ];
+        }
+
         sendResponse($order);
         exit;
     }

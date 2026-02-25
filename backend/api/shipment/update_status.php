@@ -11,13 +11,33 @@ if (!$shipmentId || !$newStatus) {
 }
 
 try {
+    // AUTO-FIX: Ensure table exists
+    $pdo->exec("CREATE TABLE IF NOT EXISTS shipment_history (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        shipment_id INT NOT NULL,
+        status VARCHAR(50) NOT NULL,
+        location VARCHAR(100),
+        remark TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )");
+
+    $pdo->beginTransaction();
+
     $stmt = $pdo->prepare("UPDATE shipments SET status = ? WHERE id = ?");
     $stmt->execute([$newStatus, $shipmentId]);
 
-    // Log the change (Audit Log placeholder)
-    
+    // Log the change in history
+    $location = $input['location'] ?? 'BGL Hub';
+    $remark = $input['remark'] ?? "Shipment status changed to " . ucfirst($newStatus);
+
+    $historyStmt = $pdo->prepare("INSERT INTO shipment_history (shipment_id, status, location, remark) VALUES (?, ?, ?, ?)");
+    $historyStmt->execute([$shipmentId, $newStatus, $location, $remark]);
+
+    $pdo->commit();
     sendResponse(["message" => "Status updated to $newStatus", "success" => true]);
 } catch (PDOException $e) {
+    if ($pdo->inTransaction())
+        $pdo->rollBack();
     sendResponse(["message" => "Error: " . $e->getMessage()], 500);
 }
 ?>

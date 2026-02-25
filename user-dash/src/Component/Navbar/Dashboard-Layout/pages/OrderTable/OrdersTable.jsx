@@ -38,7 +38,7 @@ function OrdersTable({
                         <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Order Date</th>
                         <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Package Details</th>
                         <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
-                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Last Mile Details</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Tracking Number</th>
                         <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">View Order</th>
                     </>
                 );
@@ -74,7 +74,7 @@ function OrdersTable({
                         <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Order Date</th>
                         <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Package Details</th>
                         <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
-                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Last Mile Details</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Tracking Number</th>
                         <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
                     </>
                 );
@@ -90,7 +90,7 @@ function OrdersTable({
                         <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Order Date</th>
                         <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Package Details</th>
                         <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
-                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Last Mile Details</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Tracking Number</th>
                         <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">View Order</th>
                     </>
                 );

@@ -89,24 +89,30 @@ try {
         "timeline" => []
     ];
 
-    // Build timeline
-    foreach ($statuses as $index => $stat) {
-        $completed = ($currentIndex !== false && $index <= $currentIndex);
+    // Build timeline from history
+    $historyStmt = $pdo->prepare("SELECT * FROM shipment_history WHERE shipment_id = ? ORDER BY created_at DESC");
+    $historyStmt->execute([$shipment['id']]);
+    $history = $historyStmt->fetchAll();
+
+    $response['timeline'] = [];
+    foreach ($history as $h) {
         $response['timeline'][] = [
-            "status" => $stat,
-            "label" => $labels[$stat],
-            "completed" => $completed,
-            "timestamp" => $completed ? $shipment['created_at'] : null
+            "status" => $h['status'],
+            "label" => $h['remark'] ?: ucfirst($h['status']),
+            "completed" => true,
+            "timestamp" => $h['created_at'],
+            "location" => $h['location']
         ];
     }
 
-    // Append cancellation if applicable
-    if ($shipmentStatus === 'cancelled') {
+    // Add initial entry if history is empty
+    if (empty($response['timeline'])) {
         $response['timeline'][] = [
-            "status" => 'cancelled',
-            "label" => 'Cancelled',
+            "status" => $shipmentStatus,
+            "label" => "Shipment Received",
             "completed" => true,
-            "timestamp" => $shipment['updated_at'] ?: $shipment['created_at']
+            "timestamp" => $shipment['created_at'],
+            "location" => "BGL System"
         ];
     }
 

@@ -28,17 +28,35 @@ if (!$shipmentId) {
 }
 
 try {
-    // Generate Tracking ID here
-    $tracking_id = 'BGL' . date('ymd') . strtoupper(substr(uniqid(), -6));
+    // AUTO-FIX: Ensure table exists
+    $pdo->exec("CREATE TABLE IF NOT EXISTS shipment_history (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        shipment_id INT NOT NULL,
+        status VARCHAR(50) NOT NULL,
+        location VARCHAR(100),
+        remark TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )");
+
+    $pdo->beginTransaction();
+
+    // Generate Tracking ID: BGL + 7 random digits
+    $tracking_id = 'BGL' . str_pad(rand(0, 9999999), 7, '0', STR_PAD_LEFT);
 
     // Update shipment status and set tracking_id
     $stmt = $pdo->prepare("UPDATE shipments SET status = 'ready', verified_at = NOW(), tracking_id = ? WHERE id = ?");
     $stmt->execute([$tracking_id, $shipmentId]);
 
+    // Log history
+    $historyStmt = $pdo->prepare("INSERT INTO shipment_history (shipment_id, status, location, remark) VALUES (?, 'ready', 'BGL Clearance Center', 'Shipment verified and ready for processing')");
+    $historyStmt->execute([$shipmentId]);
+
     // Fetch user email for notification
     $stmt = $pdo->prepare("SELECT u.email, u.firstname, s.tracking_id FROM users u JOIN shipments s ON u.id = s.user_id WHERE s.id = ?");
     $stmt->execute([$shipmentId]);
     $data = $stmt->fetch();
+
+    $pdo->commit();
 
     if ($data) {
         // Send Mail (Placeholder)

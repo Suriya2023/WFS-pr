@@ -16,13 +16,15 @@ $tokenData = json_decode(base64_decode($token), true);
 $userId = $tokenData['id'];
 
 if ($method == 'POST') {
-    // 1. Check KYC Status
-    $stmt = $pdo->prepare("SELECT kyc_status FROM users WHERE id = ?");
+    // 1. Check KYC Status (Bypass for admin)
+    $stmt = $pdo->prepare("SELECT kyc_status, role FROM users WHERE id = ?");
     $stmt->execute([$userId]);
     $user = $stmt->fetch();
 
-    if (!$user || $user['kyc_status'] !== 'verified') {
-        sendResponse(false, "KYC verification is required to create shipments. Your current status is: " . ($user['kyc_status'] ?? 'not_submitted'));
+    if ($user && $user['role'] !== 'admin') {
+        if ($user['kyc_status'] !== 'verified') {
+            sendResponse(false, "KYC verification is required to create shipments. Your current status is: " . ($user['kyc_status'] ?? 'not_submitted'));
+        }
     }
 
     // 2. Create Shipment
@@ -44,8 +46,8 @@ if ($method == 'POST') {
     $tracking_id = null;
 
     $sql = "INSERT INTO shipments 
-            (user_id, tracking_id, consignee_name, consignee_phone, consignee_address, destination_country, deadWeight, shippingCost, courierPartner, items, status) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft')";
+            (user_id, tracking_id, consignee_name, consignee_phone, consignee_address, destination_country, deadWeight, shippingCost, courierPartner, items, status, pickup_address_id) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', ?)";
 
     $stmt = $pdo->prepare($sql);
 
@@ -59,7 +61,8 @@ if ($method == 'POST') {
         $deadWeight,
         $shippingCost,
         $courierPartner,
-        $items
+        $items,
+        $pickupAddressId
     ];
 
     if ($stmt->execute($params)) {

@@ -41,19 +41,22 @@ function Orders({ user, setActiveRoute, setSelectedOrderId, activeTab, setActive
             const rawData = response.data.data || [];
 
             // Transform data to match table format
-            const transformedData = rawData.map(order => ({
-                orderId: order.orderId || order.tracking_id || 'ORD-' + String(order.id).padStart(6, '0'),
-                customer: order.consignee_name || 'N/A',
-                date: new Date(order.created_at).toLocaleDateString('en-IN'),
-                package: `${order.deadWeight || 0}kg - ${order.items?.[0]?.name || 'Package'}`,
-                status: order.status || 'Pending',
-                lastMile: order.status === 'manifested'
-                    ? `${order.courierPartner || 'Delhivery'} | Waiting for Pickup`
-                    : (order.tracking_id || order.courierPartner || 'Not Assigned'),
-                _id: order.id,
-                orderType: order.orderType,
-                consignee: { firstName: order.consignee_name, email: order.consignee_email }
-            }));
+            const transformedData = rawData.map(order => {
+                const randomHex = (order.id * 1234567).toString(16).toUpperCase().substring(0, 6);
+                const displayOrderId = order.tracking_id || `ORD-${randomHex}`;
+
+                return {
+                    orderId: displayOrderId,
+                    customer: order.consignee_name || 'N/A',
+                    date: new Date(order.created_at).toLocaleDateString('en-IN'),
+                    package: `${order.deadWeight || 0}kg - ${order.items?.[0]?.name || 'Package'}`,
+                    status: order.status || 'Pending',
+                    lastMile: order.tracking_id || 'Not Assigned',
+                    _id: order.id,
+                    orderType: order.orderType,
+                    consignee: { firstName: order.consignee_name, email: order.consignee_email }
+                };
+            });
 
             setOrdersData(transformedData);
         } catch (error) {
