@@ -1,0 +1,5 @@
+[25-Feb-2026 13:09:41 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 2006 MySQL server has gone away in D:\xampp\htdocs\BGL-EXP\backend\api\shipment\create.php:142
+Stack trace:
+#0 D:\xampp\htdocs\BGL-EXP\backend\api\shipment\create.php(142): PDO->rollBack()
+#1 {main}
+  thrown in D:\xampp\htdocs\BGL-EXP\backend\api\shipment\create.php on line 142

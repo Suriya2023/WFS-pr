@@ -1,0 +1,52 @@
+# Enable CORS for all API requests - Handled by config.php
+# <IfModule mod_headers.c>
+#     Header always set Access-Control-Allow-Origin "http://localhost:5173"
+#     Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+#     Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+#     Header always set Access-Control-Allow-Credentials "true"
+# </IfModule>
+
+# Handle URL Rewriting
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Remove specific OPTIONS handling to let PHP handle CORS preflight
+    # PHP/config.php now handles all CORS headers and OPTIONS requests
+
+
+    # Automatically append .php extension if the file exists
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME}\.php -f
+    RewriteRule ^(.*)$ $1.php [L]
+
+    # Rewrite /api/orders/{id}
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^api/orders/([^/.]+)$ api/orders.php?id=$1 [QSA,L]
+
+    # Rewrite /api/user/address/{id}
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^api/user/address/([^/.]+)$ api/user/address.php?id=$1 [QSA,L]
+
+    # Rewrite /api/manifests/{id}
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^api/manifests/([^/.]+)$ api/manifests.php?id=$1 [QSA,L]
+
+    # Rewrite /api/shipment/{awb}/cancel
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^api/shipment/([^/]+)/cancel$ api/shipment/cancel.php?awb=$1 [QSA,L]
+
+    # Rewrite /api/shipment/{id}
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^api/shipment/([^/.]+)$ api/shipment.php?id=$1 [QSA,L]
+</IfModule>
+
+# Prevent directory listing
+Options -Indexes
+
+# PHP error display off (config.php handles logging)
+php_flag display_errors Off

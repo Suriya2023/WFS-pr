@@ -1,0 +1,114 @@
+﻿Field	Type	Null	Key	Default	Extra
+id	int(11)	NO	PRI	NULL	auto_increment
+firstname	varchar(100)	NO		NULL	
+lastname	varchar(100)	YES		NULL	
+email	varchar(150)	NO	UNI	NULL	
+mobile	varchar(20)	YES		NULL	
+password	varchar(255)	NO		NULL	
+role	enum('user','admin')	YES		user	
+wallet_balance	decimal(15,2)	YES		0.00	
+kyc_status	enum('not_submitted','pending','verified','rejected')	YES		not_submitted	
+otp	varchar(6)	YES		NULL	
+otp_expiry	datetime	YES		NULL	
+is_verified	tinyint(1)	YES		0	
+is_blocked	tinyint(1)	YES		0	
+profile_image	varchar(255)	YES		NULL	
+created_at	timestamp	NO		current_timestamp()	
+company_name	varchar(255)	YES		NULL	
+gst_number	varchar(15)	YES		NULL	
+pan_number	varchar(10)	YES		NULL	
+aadhaar_number	varchar(12)	YES		NULL	
+shipping_margin	decimal(5,2)	YES		0.00	
+billing_address	text	YES		NULL	
+billing_city	varchar(100)	YES		NULL	
+billing_state	varchar(100)	YES		NULL	
+billing_pincode	varchar(10)	YES		NULL	
+billing_country	varchar(100)	YES		India	
+Field	Type	Null	Key	Default	Extra
+id	int(11)	NO	PRI	NULL	auto_increment
+user_id	int(11)	NO	MUL	NULL	
+pickup_address_id	int(11)	YES		NULL	
+tracking_id	varchar(50)	YES	UNI	NULL	
+awb_number	varchar(100)	YES		NULL	
+receiver_name	varchar(100)	YES		NULL	
+receiver_mobile	varchar(20)	YES		NULL	
+receiver_address	text	YES		NULL	
+weight	float	YES		NULL	
+dimensions	varchar(50)	YES		NULL	
+status	enum('draft','paid','ready','packed','manifested','dispatched','received','cancelled','disputed')	YES		draft	
+manifest_id	int(11)	YES		NULL	
+created_at	timestamp	NO		current_timestamp()	
+verified_at	timestamp	YES		NULL	
+consignee_name	varchar(150)	YES		NULL	
+consignee_phone	varchar(20)	YES		NULL	
+consignee_address	text	YES		NULL	
+destination_country	varchar(100)	YES		NULL	
+items	text	YES		NULL	
+deadWeight	decimal(10,3)	YES		NULL	
+shippingCost	decimal(15,2)	YES		NULL	
+courierPartner	varchar(100)	YES		NULL	
+payment_id	varchar(100)	YES		NULL	
+payment_order_id	varchar(100)	YES		NULL	
+payment_signature	varchar(255)	YES		NULL	
+Field	Type	Null	Key	Default	Extra
+id	int(11)	NO	PRI	NULL	auto_increment
+user_id	int(11)	YES	UNI	NULL	
+full_name	varchar(150)	YES		NULL	
+aadhaar_number	varchar(20)	YES		NULL	
+pan_number	varchar(20)	YES		NULL	
+address_details	text	YES		NULL	
+status	enum('pending','verified','rejected')	YES		pending	
+rejection_reason	text	YES		NULL	
+created_at	timestamp	NO		current_timestamp()	
+aadhaar_front	varchar(255)	YES		NULL	
+aadhaar_back	varchar(255)	YES		NULL	
+pan_card	varchar(255)	YES		NULL	
+electricity_bill	varchar(255)	YES		NULL	
+Field	Type	Null	Key	Default	Extra
+id	int(11)	NO	PRI	NULL	auto_increment
+manifest_id	int(11)	NO	MUL	NULL	
+pickup_date	date	NO		NULL	
+status	enum('scheduled','completed','cancelled')	YES		scheduled	
+created_at	timestamp	NO		current_timestamp()	
+Field	Type	Null	Key	Default	Extra
+id	int(11)	NO	PRI	NULL	auto_increment
+manifest_code	varchar(50)	NO	UNI	NULL	
+total_parcels	int(11)	YES		0	
+status	enum('open','closed','picked')	YES		open	
+created_at	timestamp	NO		current_timestamp()	
+Field	Type	Null	Key	Default	Extra
+id	int(11)	NO	PRI	NULL	auto_increment
+user_id	int(11)	YES	MUL	NULL	
+invoice_number	varchar(50)	YES	UNI	NULL	
+amount	decimal(15,2)	YES		NULL	
+status	enum('paid','unpaid','cancelled')	YES		unpaid	
+created_at	timestamp	NO		current_timestamp()	
+Field	Type	Null	Key	Default	Extra
+id	int(11)	NO	PRI	NULL	auto_increment
+user_id	int(11)	NO	MUL	NULL	
+amount	decimal(15,2)	NO		NULL	
+type	enum('credit','debit')	NO		NULL	
+description	varchar(255)	YES		NULL	
+status	enum('pending','success','failed')	YES		success	
+gateway_id	varchar(100)	YES		NULL	
+created_at	timestamp	NO		current_timestamp()	
+Field	Type	Null	Key	Default	Extra
+id	int(11)	NO	PRI	NULL	auto_increment
+user_id	int(11)	NO	MUL	NULL	
+name	varchar(100)	NO		NULL	
+phone	varchar(20)	YES		NULL	
+address1	text	YES		NULL	
+city	varchar(100)	YES		NULL	
+state	varchar(100)	YES		NULL	
+pincode	varchar(20)	YES		NULL	
+country	varchar(100)	YES		India	
+isDefault	tinyint(1)	YES		0	
+created_at	timestamp	NO		current_timestamp()	
+Field	Type	Null	Key	Default	Extra
+id	int(11)	NO	PRI	NULL	auto_increment
+user_id	int(11)	YES		NULL	
+title	varchar(100)	YES		NULL	
+message	text	YES		NULL	
+type	varchar(50)	YES		NULL	
+isRead	tinyint(1)	YES		0	
+createdAt	timestamp	NO		current_timestamp()	
