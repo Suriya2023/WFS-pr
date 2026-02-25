@@ -7,6 +7,20 @@ if (!$token) {
     sendResponse(["message" => "Unauthorized"], 401);
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    $id = $_GET['id'] ?? null;
+    if (!$id) {
+        sendResponse(["message" => "ID required"], 400);
+    }
+    $stmt = $pdo->prepare("SELECT * FROM shipments WHERE id = ?");
+    $stmt->execute([$id]);
+    $shipment = $stmt->fetch();
+    if (!$shipment) {
+        sendResponse(["message" => "Shipment not found"], 404);
+    }
+    sendResponse($shipment);
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'PUT' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
     sendResponse(["message" => "Method not allowed"], 405);
 }
