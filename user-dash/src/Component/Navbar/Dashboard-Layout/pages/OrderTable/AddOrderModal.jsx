@@ -82,8 +82,9 @@ function AddOrderModal({ onClose, onSuccess, setActiveRoute, user, editOrder, ad
         if (editOrder) {
             console.log('Edit Order Initializing:', editOrder);
 
-            // Handle consignee full name split
-            const nameParts = (editOrder.consignee_name || editOrder.receiver_name || '').split(' ');
+            // Handle consignee full name split Robustly
+            const fullName = editOrder.consignee_name || editOrder.receiver_name || editOrder.name || '';
+            const nameParts = fullName.trim().split(/\s+/);
             const firstName = nameParts[0] || '';
             const lastName = nameParts.slice(1).join(' ') || '';
 
@@ -91,15 +92,13 @@ function AddOrderModal({ onClose, onSuccess, setActiveRoute, user, editOrder, ad
                 (typeof editOrder.items === 'string' ? JSON.parse(editOrder.items || '[]') : []);
 
             // Check if we should show manual pickup address
-            // Use manual if: no ID, OR it's an admin (who doesn't have the user's saved addresses), 
-            // OR the ID simply isn't found in the current address list.
             const hasId = !!editOrder.pickup_address_id;
             const idInList = addresses.some(a => String(a.id) === String(editOrder.pickup_address_id));
             const shouldShowManual = !hasId || (userRole === 'admin' && !idInList) || (!idInList && addresses.length > 0);
 
-            // Exhaustive Fallbacks for Receiver
-            const mobile = editOrder.consignee_phone || editOrder.receiver_mobile || editOrder.mobile || editOrder.phone || '';
-            const email = editOrder.consignee_email || editOrder.receiver_email || editOrder.creator_email || editOrder.email || '';
+            // Exhaustive Fallbacks for Receiver / Consignee
+            const mobile = editOrder.consignee_phone || editOrder.receiver_mobile || editOrder.mobile_number || editOrder.mobile || editOrder.phone || '';
+            const email = editOrder.consignee_email || editOrder.receiver_email || editOrder.email || '';
             const addr1 = editOrder.consignee_address || editOrder.receiver_address || editOrder.address1 || editOrder.address || '';
             const city = editOrder.consignee_city || editOrder.receiver_city || editOrder.city || '';
             const state = editOrder.consignee_state || editOrder.receiver_state || editOrder.state || '';
@@ -126,16 +125,17 @@ function AddOrderModal({ onClose, onSuccess, setActiveRoute, user, editOrder, ad
                 city: city,
                 state: state,
                 pincode: pincode,
-                paymentMode: editOrder.paymentMode || editOrder.payment_mode || 'Prepaid',
-                serviceType: editOrder.serviceType || editOrder.courierPartner || 'Express',
+                paymentMode: editOrder.payment_mode || editOrder.paymentMode || 'Prepaid',
+                serviceType: editOrder.courierPartner || editOrder.serviceType || 'Express',
                 items: items
             }));
 
-            if (editOrder.courierPartner || editOrder.shippingCost) {
+            if (editOrder.courierPartner || editOrder.shippingCost || editOrder.shipping_cost) {
+                const cost = parseFloat(editOrder.shipping_cost || editOrder.shippingCost || 0);
                 setSelectedRate({
-                    tierName: editOrder.courierPartner || 'Express',
-                    estimatedCost: parseFloat(editOrder.shippingCost || 0),
-                    price: parseFloat(editOrder.shippingCost || 0)
+                    tierName: editOrder.courierPartner || editOrder.serviceType || 'Express',
+                    estimatedCost: cost,
+                    price: cost
                 });
             }
         }

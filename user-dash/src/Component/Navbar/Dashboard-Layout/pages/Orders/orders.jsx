@@ -42,19 +42,27 @@ function Orders({ user, setActiveRoute, setSelectedOrderId, activeTab, setActive
 
             // Transform data to match table format
             const transformedData = rawData.map(order => {
-                const randomHex = (order.id * 1234567).toString(16).toUpperCase().substring(0, 6);
-                const displayOrderId = order.tracking_id || `ORD-${randomHex}`;
+                // Standard Padded ID for display if tracking ID is missing
+                const displayOrderId = order.tracking_id || `ORD-${String(order.id).padStart(6, '0')}`;
 
                 return {
                     orderId: displayOrderId,
                     customer: order.consignee_name || 'N/A',
-                    date: new Date(order.created_at).toLocaleDateString('en-IN'),
-                    package: `${order.deadWeight || 0}kg - ${order.items?.[0]?.name || 'Package'}`,
+                    date: order.created_at ? new Date(order.created_at).toLocaleDateString('en-IN', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                    }) : 'N/A',
+                    package: `${order.deadWeight || 0}kg - ${Array.isArray(order.items) && order.items.length > 0 ? order.items[0].name : (order.package_name || 'Shipment')}`,
                     status: order.status || 'Pending',
                     lastMile: order.tracking_id || 'Not Assigned',
                     _id: order.id,
-                    orderType: order.orderType,
-                    consignee: { firstName: order.consignee_name, email: order.consignee_email }
+                    orderType: order.orderType || 'Standard',
+                    consignee: {
+                        firstName: order.consignee_name || '',
+                        email: order.consignee_email || '',
+                        mobile: order.consignee_phone || ''
+                    }
                 };
             });
 
@@ -82,7 +90,8 @@ function Orders({ user, setActiveRoute, setSelectedOrderId, activeTab, setActive
         try {
             const token = localStorage.getItem('token');
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/orders.php?id=${orderId}`, config);
+            // Use shipment/update.php GET method to fetch fresh data for edit
+            const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/shipment/update.php?id=${orderId}`, config);
             setEditOrder(data);
             setShowAddOrderModal(true);
         } catch (error) {

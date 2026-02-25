@@ -221,8 +221,9 @@ export const OrderTable = ({
                                             <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{order.date}</td>
                                             <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{order.package}</td>
                                             <td className="px-4 py-3">
-                                                <span className={`px-4 py-1.5 text-[9px] font-black uppercase tracking-[0.15em] rounded-full border transition-all duration-300 flex items-center w-fit gap-2 ${order.status === 'pending_payment' || order.status === 'payment_pending' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                                                        order.status === 'paid' || order.status === 'confirmed' ? 'bg-green-50 text-green-600 border-green-100' :
+                                                <span className={`px-4 py-1.5 text-[9px] font-black uppercase tracking-[0.15em] rounded-full border transition-all duration-300 flex items-center w-fit gap-2 ${order.status === 'pending_payment' || order.status === 'payment_pending' ? 'bg-amber-50 text-amber-600 border-amber-100 shadow-[0_0_12px_rgba(245,158,11,0.05)]' :
+                                                    order.status === 'paid' || order.status === 'confirmed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                                        order.status === 'ready' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' :
                                                             order.status === 'dispatched' || order.status === 'in_transit' ? 'bg-blue-50 text-blue-600 border-blue-100 shadow-[0_0_12px_rgba(59,130,246,0.1)]' :
                                                                 order.status === 'draft' ? 'bg-slate-50 text-slate-500 border-slate-100' :
                                                                     'bg-slate-50 text-slate-700 border-slate-200'
@@ -230,13 +231,16 @@ export const OrderTable = ({
                                                     {(order.status === 'dispatched' || order.status === 'in_transit') && (
                                                         <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
                                                     )}
-                                                    {order.status === 'pending_payment' ? 'Pending Amount' : order.status?.replace('_', ' ')}
+                                                    {(order.status === 'pending_payment' || order.status === 'payment_pending') && (
+                                                        <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
+                                                    )}
+                                                    {order.status === 'pending_payment' || order.status === 'payment_pending' ? 'Auth Required' : order.status?.replace('_', ' ')}
                                                 </span>
                                             </td>
                                             {(activeTab === 'all' || activeTab === 'disputed' ||
                                                 activeTab === 'packed' || activeTab === 'manifested' ||
                                                 activeTab === 'dispatched' || activeTab === 'received') && (
-                                                    <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
+                                                    <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 font-medium">
                                                         {order.lastMile || '-'}
                                                     </td>
                                                 )}
@@ -246,18 +250,18 @@ export const OrderTable = ({
                                                     {(order.status === 'pending_payment' || order.status === 'payment_pending') && onPayNow && (
                                                         <button
                                                             onClick={() => onPayNow(order._id || order.orderId)}
-                                                            className="px-4 py-2 bg-green-50 text-green-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-green-600 hover:text-white transition-all shadow-sm active:scale-95 border border-green-100/50 flex items-center gap-2"
+                                                            className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-lg active:scale-95 flex items-center gap-2"
                                                         >
-                                                            <CreditCard className="w-3.5 h-3.5" />
+                                                            <CreditCard className="w-3.5 h-3.5 text-amber-500" />
                                                             Pay Now
                                                         </button>
                                                     )}
 
-                                                    {/* Edit Button - Visible until admin verifies (draft or paid) */}
-                                                    {(order.status === 'draft' || order.status === 'payment_pending' || order.status === 'paid') ? (
+                                                    {/* Edit Button - Visible until admin verifies (draft, pending_payment or paid) */}
+                                                    {(order.status === 'draft' || order.status === 'payment_pending' || order.status === 'pending_payment' || order.status === 'paid') ? (
                                                         <button
                                                             onClick={() => onEditOrder && onEditOrder(order._id || order.orderId)}
-                                                            className="px-4 py-2 bg-orange-50 text-orange-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-orange-600 hover:text-white transition-all shadow-sm active:scale-95 border border-orange-100/50"
+                                                            className="px-4 py-2 bg-white text-slate-900 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 border border-slate-200 transition-all shadow-sm active:scale-95"
                                                         >
                                                             Edit
                                                         </button>

@@ -25,6 +25,7 @@ import AddressBook from './pages/AddressBook/AddressBook';
 import BottomNav from './Layout/BottomNav';
 import OrderHistoryDrawer from './Layout/OrderHistoryDrawer';
 import AdminDashboard from './pages/Admin/AdminDashboard';
+import KYCForm from './pages/KYC/KYCForm';
 import { m } from 'framer-motion'
 
 
@@ -178,6 +179,8 @@ function FinalDashConntrole() {
                 return <div className="p-8 text-center text-gray-500 font-black uppercase tracking-widest">Coupon Management Coming Soon</div>;
             case 'documents':
                 return <DocumentsPage />;
+            case 'kyc':
+                return <KYCForm onClose={() => setActiveRoute('dashboard')} onSuccess={() => fetchDashboardStats()} />;
             case 'buy-packaging':
                 return <div className="p-8 text-center bg-white m-6 rounded-2xl border border-dashed border-gray-300">
                     <div className="text-5xl mb-4">📦</div>

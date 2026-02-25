@@ -1,7 +1,5 @@
 import React from 'react'
 import { Package, Truck, Plus, FileText, Wallet, CheckCircle, AlertTriangle, ChevronRight, TrendingUp, Clock, ArrowRight } from 'lucide-react'
-import KYCForm from '../KYC/KYCForm'
-
 function mainDash({ setActiveRoute, setOrdersTab, stats }) {
     const orders = stats?.orders || {};
     const walletBalance = stats?.user?.walletBalance || 0;
@@ -10,8 +8,6 @@ function mainDash({ setActiveRoute, setOrdersTab, stats }) {
         if (setOrdersTab) setOrdersTab(tabId);
         setActiveRoute('orders');
     };
-
-    const [showKYCForm, setShowKYCForm] = React.useState(false);
 
     return (
         <div className="p-8 lg:p-12 min-h-screen bg-[#F4F6F8]">
@@ -30,37 +26,61 @@ function mainDash({ setActiveRoute, setOrdersTab, stats }) {
                         </p>
 
                         <div className="flex gap-4 flex-wrap">
-                            <div className="px-4 py-2 bg-gray-100 rounded-xl text-sm font-semibold">
+                            <div className="px-4 py-2 bg-gray-100 rounded-xl text-sm font-semibold flex items-center gap-2">
                                 DOMESTIC
-                                <span className="ml-2 px-2 py-1 bg-green-100 text-green-600 rounded-full text-xs">
-                                    Verified
-                                </span>
+                                {stats?.user?.kycStatus === 'verified' && (
+                                    <span className="px-2 py-1 bg-green-100 text-green-600 rounded-full text-[10px] font-black uppercase tracking-wider">
+                                        Verified
+                                    </span>
+                                )}
+                                {stats?.user?.kycStatus === 'pending' && (
+                                    <span className="px-2 py-1 bg-amber-100 text-amber-600 rounded-full text-[10px] font-black uppercase tracking-wider">
+                                        Pending Verification
+                                    </span>
+                                )}
+                                {(stats?.user?.kycStatus === 'not_submitted' || stats?.user?.kycStatus === 'rejected') && (
+                                    <span className="px-2 py-1 bg-red-100 text-red-600 rounded-full text-[10px] font-black uppercase tracking-wider">
+                                        Not Verified
+                                    </span>
+                                )}
                             </div>
 
-                            <div className="px-4 py-2 bg-gray-100 rounded-xl text-sm font-semibold">
+                            <div className={`px-4 py-2 bg-gray-100 rounded-xl text-sm font-semibold flex items-center gap-2 ${stats?.user?.kycStatus !== 'verified' ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}>
                                 INTERNATIONAL
-                                <span className="ml-2 px-2 py-1 bg-green-100 text-green-600 rounded-full text-xs">
-                                    Verified
-                                </span>
+                                {stats?.user?.kycStatus === 'verified' ? (
+                                    <span className="px-2 py-1 bg-green-100 text-green-600 rounded-full text-[10px] font-black uppercase tracking-wider">
+                                        Verified
+                                    </span>
+                                ) : (
+                                    <span className="px-2 py-1 bg-gray-200 text-gray-400 rounded-full text-[10px] font-black uppercase tracking-wider">
+                                        KYC Reqd
+                                    </span>
+                                )}
                             </div>
                         </div>
 
-                        <p className="text-green-600 text-sm font-medium mt-4">
-                            Your account is fully verified and ready for global shipping.
+                        <p className={`text-sm font-medium mt-4 ${stats?.user?.kycStatus === 'verified' ? 'text-green-600' : 'text-slate-400'}`}>
+                            {stats?.user?.kycStatus === 'verified'
+                                ? 'Your account is fully verified and ready for global shipping.'
+                                : 'Complete your KYC verification to unlock domestic and international shipping modules.'}
                         </p>
                     </div>
 
                     <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 w-full lg:w-[320px]">
-                        <h4 className="font-semibold text-gray-800 mb-2">Account Status</h4>
+                        <h4 className="font-semibold text-gray-800 mb-2">Verification Hub</h4>
                         <p className="text-gray-500 text-sm mb-5">
-                            Complete verification to begin shipping orders.
+                            {stats?.user?.kycStatus === 'verified'
+                                ? 'Your documents are verified. You can view your details here.'
+                                : 'Upload your Aadhaar & PAN details to start shipping.'}
                         </p>
 
                         <button
-                            onClick={() => setActiveRoute('settings')}
-                            className="w-full bg-white border border-gray-300 py-2 rounded-lg font-medium hover:bg-gray-100 transition"
+                            onClick={() => setActiveRoute('kyc')}
+                            className={`w-full py-2.5 rounded-lg font-bold text-xs uppercase tracking-widest transition-all ${stats?.user?.kycStatus === 'verified'
+                                ? 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                                : 'bg-red-600 text-white hover:bg-black shadow-lg shadow-red-500/20'}`}
                         >
-                            View Settings
+                            {stats?.user?.kycStatus === 'verified' ? 'View KYC Status' : 'Complete KYC Now'}
                         </button>
                     </div>
 
