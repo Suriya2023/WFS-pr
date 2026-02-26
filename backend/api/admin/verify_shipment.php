@@ -3,14 +3,14 @@
 require_once '../../config.php';
 
 $headers = function_exists('apache_request_headers') ? apache_request_headers() : [];
-$authHeader = $headers['Authorization'] ?? $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
+$authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : (isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) ? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] : '';
 
 if (!preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
     sendResponse(["message" => "Unauthorized"], 401);
 }
 
 $tokenData = json_decode(base64_decode($matches[1]), true);
-$userId = $tokenData['id'] ?? null;
+$userId = isset($tokenData['id']) ? $tokenData['id'] : null;
 
 if (!$userId) {
     sendResponse(["message" => "Invalid token"], 401);
@@ -21,7 +21,7 @@ try {
     $stmt = $pdo->prepare("SELECT role FROM users WHERE id = ?");
     $stmt->execute([$userId]);
     $userRow = $stmt->fetch();
-    $role = $userRow['role'] ?? 'user';
+    $role = isset($userRow['role']) ? $userRow['role'] : 'user';
 } catch (PDOException $e) {
     sendResponse(["message" => "DB error during auth"], 500);
 }
@@ -31,7 +31,7 @@ if ($role !== 'admin') {
 }
 
 $input = json_decode(file_get_contents("php://input"), true);
-$shipmentId = $input['shipment_id'] ?? null;
+$shipmentId = isset($input['shipment_id']) ? $input['shipment_id'] : null;
 
 if (!$shipmentId) {
     sendResponse(["message" => "Shipment ID required"], 400);

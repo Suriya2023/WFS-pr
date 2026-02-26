@@ -23,24 +23,24 @@ if ($method == 'POST') {
 
     if ($user && $user['role'] !== 'admin') {
         if ($user['kyc_status'] !== 'verified') {
-            sendResponse(false, "KYC verification is required to create shipments. Your current status is: " . ($user['kyc_status'] ?? 'not_submitted'));
+            sendResponse(false, "KYC verification is required to create shipments. Your current status is: " . (isset($user['kyc_status']) ? $user['kyc_status'] : 'not_submitted'));
         }
     }
 
     // 2. Create Shipment
-    $pickupAddressId = $data['pickupAddressId'] ?? '';
+    $pickupAddressId = isset($data['pickupAddressId']) ? $data['pickupAddressId'] : '';
 
     // Consignee details
-    $consignee = $data['consignee'] ?? [];
-    $consignee_name = trim(($consignee['firstName'] ?? '') . ' ' . ($consignee['lastName'] ?? ''));
-    $consignee_phone = $consignee['mobile'] ?? '';
-    $consignee_address = $consignee['address1'] ?? '';
-    $destination_country = $consignee['country'] ?? '';
+    $consignee = isset($data['consignee']) ? $data['consignee'] : [];
+    $consignee_name = trim((isset($consignee['firstName']) ? $consignee['firstName'] : '') . ' ' . (isset($consignee['lastName']) ? $consignee['lastName'] : ''));
+    $consignee_phone = isset($consignee['mobile']) ? $consignee['mobile'] : '';
+    $consignee_address = isset($consignee['address1']) ? $consignee['address1'] : '';
+    $destination_country = isset($consignee['country']) ? $consignee['country'] : '';
 
-    $deadWeight = $data['deadWeight'] ?? 0;
-    $shippingCost = $data['shippingCost'] ?? 0;
-    $courierPartner = $data['courierPartner'] ?? '';
-    $items = json_encode($data['items'] ?? []);
+    $deadWeight = isset($data['deadWeight']) ? $data['deadWeight'] : 0;
+    $shippingCost = isset($data['shippingCost']) ? $data['shippingCost'] : 0;
+    $courierPartner = isset($data['courierPartner']) ? $data['courierPartner'] : '';
+    $items = json_encode(isset($data['items']) ? $data['items'] : []);
 
     // Generate Tracking ID (Delayed until admin verification)
     $tracking_id = null;
@@ -80,7 +80,7 @@ if ($method == 'POST') {
         $stmt->execute([$_GET['id'], $userId]);
         $shipment = $stmt->fetch();
         if ($shipment) {
-            $shipment['items'] = json_decode($shipment['items'] ?? '[]', true);
+            $shipment['items'] = json_decode(isset($shipment['items']) ? $shipment['items'] : '[]', true);
             $shipment['orderId'] = $shipment['tracking_id'] ?: 'ORD-' . str_pad($shipment['id'], 6, '0', STR_PAD_LEFT);
             sendResponse(true, "Shipment details", $shipment);
         } else {
@@ -104,7 +104,7 @@ if ($method == 'POST') {
 
         // Decode items and add temporary orderId
         foreach ($shipments as &$s) {
-            $s['items'] = json_decode($s['items'] ?? '[]', true);
+            $s['items'] = json_decode(isset($s['items']) ? $s['items'] : '[]', true);
             $s['orderId'] = $s['tracking_id'] ?: 'ORD-' . str_pad($s['id'], 6, '0', STR_PAD_LEFT);
         }
 
@@ -113,8 +113,8 @@ if ($method == 'POST') {
 
 } elseif ($method == 'PUT') {
     // Update Shipment (e.g., Cancel)
-    $shipmentId = $data['id'] ?? null;
-    $status = $data['status'] ?? null;
+    $shipmentId = isset($data['id']) ? $data['id'] : null;
+    $status = isset($data['status']) ? $data['status'] : null;
 
     if (!$shipmentId || !$status) {
         sendResponse(false, "ID and Status required");

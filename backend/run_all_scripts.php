@@ -1,5 +1,5 @@
 <?php
-// d:\xampp\htdocs\BGL-EXP\backend\run_all_scripts.php
+// d:\WFS\htdocs\WFS-pr\backend\run_all_scripts.php
 require_once 'config.php';
 
 echo "<pre>";

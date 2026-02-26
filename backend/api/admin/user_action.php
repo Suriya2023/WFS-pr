@@ -3,9 +3,9 @@ require_once '../../config.php';
 
 // Auth Check
 $headers = apache_request_headers();
-$token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
+$token = str_replace('Bearer ', '', isset($headers['Authorization']) ? $headers['Authorization'] : '');
 $tokenData = json_decode(base64_decode($token), true);
-$adminId = $tokenData['id'] ?? null;
+$adminId = isset($tokenData['id']) ? $tokenData['id'] : null;
 
 if (!$adminId)
     sendResponse(["message" => "Unauthorized"], 401);
@@ -18,8 +18,8 @@ if (!$admin || $admin['role'] !== 'admin')
     sendResponse(["message" => "Forbidden"], 403);
 
 $input = json_decode(file_get_contents("php://input"), true);
-$action = $input['action'] ?? '';
-$targetUserId = $input['user_id'] ?? null;
+$action = isset($input['action']) ? $input['action'] : '';
+$targetUserId = isset($input['user_id']) ? $input['user_id'] : null;
 
 if (!$targetUserId)
     sendResponse(["message" => "User ID required"], 400);
@@ -37,11 +37,11 @@ try {
             sendResponse(["message" => "User unblocked successfully"]);
             break;
         case 'update':
-            $firstname = $input['firstname'] ?? '';
-            $lastname = $input['lastname'] ?? '';
-            $email = $input['email'] ?? '';
-            $mobile = $input['mobile'] ?? '';
-            $kyc_status = $input['kyc_status'] ?? 'pending';
+            $firstname = isset($input['firstname']) ? $input['firstname'] : '';
+            $lastname = isset($input['lastname']) ? $input['lastname'] : '';
+            $email = isset($input['email']) ? $input['email'] : '';
+            $mobile = isset($input['mobile']) ? $input['mobile'] : '';
+            $kyc_status = isset($input['kyc_status']) ? $input['kyc_status'] : 'pending';
 
             if (!$firstname || !$email)
                 sendResponse(["message" => "Firstname and Email required"], 400);
@@ -51,7 +51,7 @@ try {
             sendResponse(["message" => "User details updated successfully"]);
             break;
         case 'wallet_recharge':
-            $amount = floatval($input['amount'] ?? 0);
+            $amount = floatval(isset($input['amount']) ? $input['amount'] : 0);
             if ($amount <= 0)
                 sendResponse(["message" => "Invalid amount"], 400);
 

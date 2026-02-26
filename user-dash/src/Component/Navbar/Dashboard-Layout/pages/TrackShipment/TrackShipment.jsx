@@ -263,7 +263,7 @@ function TrackShipment() {
                                                                 <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-slate-200 group-hover:bg-blue-50 group-hover:text-blue-500 transition-all duration-500 overflow-hidden border border-slate-100/50">
                                                                     {(item.images && item.images.length > 0) ? (
                                                                         <img
-                                                                            src={`${import.meta.env.VITE_API_BASE_URL.replace('/api', '').replace('/backend', '')}${item.images[0]}`}
+                                                                            src={`${import.meta.env.VITE_API_BASE_URL.replace('/api', '')}/${item.images[0]}`}
                                                                             alt={item.name}
                                                                             className="w-full h-full object-cover"
                                                                             onError={(e) => {

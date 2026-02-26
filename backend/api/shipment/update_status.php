@@ -3,8 +3,8 @@
 require_once '../../config.php';
 
 $input = json_decode(file_get_contents("php://input"), true);
-$shipmentId = $input['shipment_id'] ?? null;
-$newStatus = $input['status'] ?? null; // e.g., 'ready', 'packed', 'cancelled'
+$shipmentId = isset($input['shipment_id']) ? $input['shipment_id'] : null;
+$newStatus = isset($input['status']) ? $input['status'] : null; // e.g., 'ready', 'packed', 'cancelled'
 
 if (!$shipmentId || !$newStatus) {
     sendResponse(["message" => "Shipment ID and logic required"], 400);
@@ -27,8 +27,8 @@ try {
     $stmt->execute([$newStatus, $shipmentId]);
 
     // Log the change in history
-    $location = $input['location'] ?? 'BGL Hub';
-    $remark = $input['remark'] ?? "Shipment status changed to " . ucfirst($newStatus);
+    $location = isset($input['location']) ? $input['location'] : 'BGL Hub';
+    $remark = isset($input['remark']) ? $input['remark'] : "Shipment status changed to " . ucfirst($newStatus);
 
     $historyStmt = $pdo->prepare("INSERT INTO shipment_history (shipment_id, status, location, remark) VALUES (?, ?, ?, ?)");
     $historyStmt->execute([$shipmentId, $newStatus, $location, $remark]);

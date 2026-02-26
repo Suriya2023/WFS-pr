@@ -1,5 +1,5 @@
 <?php
-//  http://localhost:8081/BGL-EXP/backend/setup_db.php
+//  http://localhost/WFS-pr/backend/setup_db.php
 // backend/setup_db.php
 require_once 'config.php';
 

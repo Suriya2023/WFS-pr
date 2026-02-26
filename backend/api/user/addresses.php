@@ -31,17 +31,17 @@ if ($method == 'GET') {
     // Add or Update address
     $data = json_decode(file_get_contents("php://input"), true);
 
-    $id = $data['id'] ?? null;
-    $name = $data['name'] ?? '';
-    $phone = $data['phone'] ?? '';
-    $address1 = $data['address1'] ?? '';
-    $city = $data['city'] ?? '';
-    $state = $data['state'] ?? '';
-    $pincode = $data['pincode'] ?? '';
-    $country = $data['country'] ?? 'India';
+    $id = isset($data['id']) ? $data['id'] : null;
+    $name = isset($data['name']) ? $data['name'] : '';
+    $phone = isset($data['phone']) ? $data['phone'] : '';
+    $address1 = isset($data['address1']) ? $data['address1'] : '';
+    $city = isset($data['city']) ? $data['city'] : '';
+    $state = isset($data['state']) ? $data['state'] : '';
+    $pincode = isset($data['pincode']) ? $data['pincode'] : '';
+    $country = isset($data['country']) ? $data['country'] : 'India';
     $isDefault = isset($data['isDefault']) ? ($data['isDefault'] ? 1 : 0) : 0;
 
-    $action = $data['action'] ?? null;
+    $action = isset($data['action']) ? $data['action'] : null;
 
     if ($action === 'clear_all') {
         try {
@@ -57,7 +57,7 @@ if ($method == 'GET') {
 
     if ($action === 'set_default') {
         try {
-            $id = $data['id'] ?? null;
+            $id = isset($data['id']) ? $data['id'] : null;
             if (!$id)
                 sendResponse(false, "ID required for default update");
 
@@ -102,7 +102,7 @@ if ($method == 'GET') {
 } elseif ($method == 'DELETE') {
     // Delete address
     $data = json_decode(file_get_contents("php://input"), true);
-    $id = $data['id'] ?? null;
+    $id = isset($data['id']) ? $data['id'] : null;
 
     if (!$id) {
         sendResponse(false, "ID missing");

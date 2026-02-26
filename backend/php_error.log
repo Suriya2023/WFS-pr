@@ -1,152 +1,17 @@
-[25-Feb-2026 13:09:41 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 2006 MySQL server has gone away in D:\xampp\htdocs\BGL-EXP\backend\api\shipment\create.php:142
-Stack trace:
-#0 D:\xampp\htdocs\BGL-EXP\backend\api\shipment\create.php(142): PDO->rollBack()
-#1 {main}
-  thrown in D:\xampp\htdocs\BGL-EXP\backend\api\shipment\create.php on line 142
-[25-Feb-2026 17:28:00 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type bool in D:\xampp\htdocs\BGL-EXP\backend\api\shipment\list.php on line 25
-[25-Feb-2026 17:28:00 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type bool in D:\xampp\htdocs\BGL-EXP\backend\api\shipment\list.php on line 37
-[26-Feb-2026 04:39:20 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1932 Table 'user_dash_db.users' doesn't exist in engine in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php:78
-Stack trace:
-#0 D:\xampp\htdocs\BGL-EXP\backend\api\auth.php(78): PDOStatement->execute(Array)
-#1 {main}
-  thrown in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php on line 78
-[26-Feb-2026 04:39:25 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1932 Table 'user_dash_db.users' doesn't exist in engine in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php:78
-Stack trace:
-#0 D:\xampp\htdocs\BGL-EXP\backend\api\auth.php(78): PDOStatement->execute(Array)
-#1 {main}
-  thrown in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php on line 78
-[26-Feb-2026 04:39:28 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1932 Table 'user_dash_db.users' doesn't exist in engine in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php:78
-Stack trace:
-#0 D:\xampp\htdocs\BGL-EXP\backend\api\auth.php(78): PDOStatement->execute(Array)
-#1 {main}
-  thrown in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php on line 78
-[26-Feb-2026 04:39:40 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1932 Table 'user_dash_db.users' doesn't exist in engine in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php:78
-Stack trace:
-#0 D:\xampp\htdocs\BGL-EXP\backend\api\auth.php(78): PDOStatement->execute(Array)
-#1 {main}
-  thrown in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php on line 78
-[26-Feb-2026 04:43:15 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1932 Table 'user_dash_db.users' doesn't exist in engine in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php:21
-Stack trace:
-#0 D:\xampp\htdocs\BGL-EXP\backend\api\auth.php(21): PDOStatement->execute(Array)
-#1 {main}
-  thrown in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php on line 21
-[26-Feb-2026 04:43:16 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1932 Table 'user_dash_db.users' doesn't exist in engine in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php:21
-Stack trace:
-#0 D:\xampp\htdocs\BGL-EXP\backend\api\auth.php(21): PDOStatement->execute(Array)
-#1 {main}
-  thrown in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php on line 21
-[26-Feb-2026 04:43:16 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1932 Table 'user_dash_db.users' doesn't exist in engine in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php:21
-Stack trace:
-#0 D:\xampp\htdocs\BGL-EXP\backend\api\auth.php(21): PDOStatement->execute(Array)
-#1 {main}
-  thrown in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php on line 21
-[26-Feb-2026 04:43:16 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1932 Table 'user_dash_db.users' doesn't exist in engine in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php:21
-Stack trace:
-#0 D:\xampp\htdocs\BGL-EXP\backend\api\auth.php(21): PDOStatement->execute(Array)
-#1 {main}
-  thrown in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php on line 21
-[26-Feb-2026 04:43:17 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1932 Table 'user_dash_db.users' doesn't exist in engine in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php:21
-Stack trace:
-#0 D:\xampp\htdocs\BGL-EXP\backend\api\auth.php(21): PDOStatement->execute(Array)
-#1 {main}
-  thrown in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php on line 21
-[26-Feb-2026 04:43:17 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1932 Table 'user_dash_db.users' doesn't exist in engine in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php:21
-Stack trace:
-#0 D:\xampp\htdocs\BGL-EXP\backend\api\auth.php(21): PDOStatement->execute(Array)
-#1 {main}
-  thrown in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php on line 21
-[26-Feb-2026 04:43:17 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1932 Table 'user_dash_db.users' doesn't exist in engine in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php:21
-Stack trace:
-#0 D:\xampp\htdocs\BGL-EXP\backend\api\auth.php(21): PDOStatement->execute(Array)
-#1 {main}
-  thrown in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php on line 21
-[26-Feb-2026 04:43:17 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1932 Table 'user_dash_db.users' doesn't exist in engine in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php:21
-Stack trace:
-#0 D:\xampp\htdocs\BGL-EXP\backend\api\auth.php(21): PDOStatement->execute(Array)
-#1 {main}
-  thrown in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php on line 21
-[26-Feb-2026 04:43:27 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1932 Table 'user_dash_db.users' doesn't exist in engine in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php:21
-Stack trace:
-#0 D:\xampp\htdocs\BGL-EXP\backend\api\auth.php(21): PDOStatement->execute(Array)
-#1 {main}
-  thrown in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php on line 21
-[26-Feb-2026 04:43:28 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1932 Table 'user_dash_db.users' doesn't exist in engine in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php:21
-Stack trace:
-#0 D:\xampp\htdocs\BGL-EXP\backend\api\auth.php(21): PDOStatement->execute(Array)
-#1 {main}
-  thrown in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php on line 21
-[26-Feb-2026 04:43:28 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1932 Table 'user_dash_db.users' doesn't exist in engine in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php:21
-Stack trace:
-#0 D:\xampp\htdocs\BGL-EXP\backend\api\auth.php(21): PDOStatement->execute(Array)
-#1 {main}
-  thrown in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php on line 21
-[26-Feb-2026 04:43:29 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1932 Table 'user_dash_db.users' doesn't exist in engine in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php:21
-Stack trace:
-#0 D:\xampp\htdocs\BGL-EXP\backend\api\auth.php(21): PDOStatement->execute(Array)
-#1 {main}
-  thrown in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php on line 21
-[26-Feb-2026 04:43:29 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1932 Table 'user_dash_db.users' doesn't exist in engine in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php:21
-Stack trace:
-#0 D:\xampp\htdocs\BGL-EXP\backend\api\auth.php(21): PDOStatement->execute(Array)
-#1 {main}
-  thrown in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php on line 21
-[26-Feb-2026 04:49:23 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1932 Table 'user_dash_db.users' doesn't exist in engine in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php:21
-Stack trace:
-#0 D:\xampp\htdocs\BGL-EXP\backend\api\auth.php(21): PDOStatement->execute(Array)
-#1 {main}
-  thrown in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php on line 21
-[26-Feb-2026 04:49:28 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1932 Table 'user_dash_db.users' doesn't exist in engine in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php:21
-Stack trace:
-#0 D:\xampp\htdocs\BGL-EXP\backend\api\auth.php(21): PDOStatement->execute(Array)
-#1 {main}
-  thrown in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php on line 21
-[26-Feb-2026 04:59:27 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'user_dash_db.users' doesn't exist in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php:21
-Stack trace:
-#0 D:\xampp\htdocs\BGL-EXP\backend\api\auth.php(21): PDOStatement->execute(Array)
-#1 {main}
-  thrown in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php on line 21
-[26-Feb-2026 04:59:28 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'user_dash_db.users' doesn't exist in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php:21
-Stack trace:
-#0 D:\xampp\htdocs\BGL-EXP\backend\api\auth.php(21): PDOStatement->execute(Array)
-#1 {main}
-  thrown in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php on line 21
-[26-Feb-2026 04:59:50 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'user_dash_db.users' doesn't exist in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php:21
-Stack trace:
-#0 D:\xampp\htdocs\BGL-EXP\backend\api\auth.php(21): PDOStatement->execute(Array)
-#1 {main}
-  thrown in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php on line 21
-[26-Feb-2026 05:00:00 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'user_dash_db.users' doesn't exist in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php:21
-Stack trace:
-#0 D:\xampp\htdocs\BGL-EXP\backend\api\auth.php(21): PDOStatement->execute(Array)
-#1 {main}
-  thrown in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php on line 21
-[26-Feb-2026 05:00:01 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'user_dash_db.users' doesn't exist in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php:21
-Stack trace:
-#0 D:\xampp\htdocs\BGL-EXP\backend\api\auth.php(21): PDOStatement->execute(Array)
-#1 {main}
-  thrown in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php on line 21
-[26-Feb-2026 05:00:01 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'user_dash_db.users' doesn't exist in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php:21
-Stack trace:
-#0 D:\xampp\htdocs\BGL-EXP\backend\api\auth.php(21): PDOStatement->execute(Array)
-#1 {main}
-  thrown in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php on line 21
-[26-Feb-2026 05:00:01 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'user_dash_db.users' doesn't exist in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php:21
-Stack trace:
-#0 D:\xampp\htdocs\BGL-EXP\backend\api\auth.php(21): PDOStatement->execute(Array)
-#1 {main}
-  thrown in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php on line 21
-[26-Feb-2026 05:00:02 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'user_dash_db.users' doesn't exist in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php:21
-Stack trace:
-#0 D:\xampp\htdocs\BGL-EXP\backend\api\auth.php(21): PDOStatement->execute(Array)
-#1 {main}
-  thrown in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php on line 21
-[26-Feb-2026 05:00:02 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'user_dash_db.users' doesn't exist in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php:21
-Stack trace:
-#0 D:\xampp\htdocs\BGL-EXP\backend\api\auth.php(21): PDOStatement->execute(Array)
-#1 {main}
-  thrown in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php on line 21
-[26-Feb-2026 05:00:02 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'user_dash_db.users' doesn't exist in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php:21
-Stack trace:
-#0 D:\xampp\htdocs\BGL-EXP\backend\api\auth.php(21): PDOStatement->execute(Array)
-#1 {main}
-  thrown in D:\xampp\htdocs\BGL-EXP\backend\api\auth.php on line 21
+[26-Feb-2026 15:25:19 Europe/Berlin] PHP Parse error:  syntax error, unexpected '?' in D:\WFS\htdocs\WFS-pr\backend\api\user\profile.php on line 19
+[26-Feb-2026 15:57:05 Europe/Berlin] PHP Warning:  PDOStatement::execute(): MySQL server has gone away in D:\WFS\htdocs\WFS-pr\backend\api\shipment\create.php on line 157
+[26-Feb-2026 15:57:05 Europe/Berlin] PHP Warning:  PDOStatement::execute(): Error reading result set's header in D:\WFS\htdocs\WFS-pr\backend\api\shipment\create.php on line 157
+[26-Feb-2026 15:58:50 Europe/Berlin] PHP Warning:  PDOStatement::execute(): MySQL server has gone away in D:\WFS\htdocs\WFS-pr\backend\api\shipment\create.php on line 157
+[26-Feb-2026 15:58:50 Europe/Berlin] PHP Warning:  PDOStatement::execute(): Error reading result set's header in D:\WFS\htdocs\WFS-pr\backend\api\shipment\create.php on line 157
+[26-Feb-2026 15:58:55 Europe/Berlin] PHP Warning:  PDOStatement::execute(): MySQL server has gone away in D:\WFS\htdocs\WFS-pr\backend\api\shipment\create.php on line 157
+[26-Feb-2026 15:58:55 Europe/Berlin] PHP Warning:  PDOStatement::execute(): Error reading result set's header in D:\WFS\htdocs\WFS-pr\backend\api\shipment\create.php on line 157
+[26-Feb-2026 15:59:08 Europe/Berlin] PHP Warning:  PDOStatement::execute(): MySQL server has gone away in D:\WFS\htdocs\WFS-pr\backend\api\shipment\create.php on line 157
+[26-Feb-2026 15:59:08 Europe/Berlin] PHP Warning:  PDOStatement::execute(): Error reading result set's header in D:\WFS\htdocs\WFS-pr\backend\api\shipment\create.php on line 157
+[26-Feb-2026 15:59:25 Europe/Berlin] PHP Warning:  PDOStatement::execute(): MySQL server has gone away in D:\WFS\htdocs\WFS-pr\backend\api\shipment\create.php on line 157
+[26-Feb-2026 15:59:25 Europe/Berlin] PHP Warning:  PDOStatement::execute(): Error reading result set's header in D:\WFS\htdocs\WFS-pr\backend\api\shipment\create.php on line 157
+[26-Feb-2026 15:59:48 Europe/Berlin] PHP Warning:  PDOStatement::execute(): MySQL server has gone away in D:\WFS\htdocs\WFS-pr\backend\api\shipment\create.php on line 157
+[26-Feb-2026 15:59:48 Europe/Berlin] PHP Warning:  PDOStatement::execute(): Error reading result set's header in D:\WFS\htdocs\WFS-pr\backend\api\shipment\create.php on line 157
+[26-Feb-2026 16:02:19 Europe/Berlin] PHP Warning:  PDOStatement::execute(): MySQL server has gone away in D:\WFS\htdocs\WFS-pr\backend\api\shipment\create.php on line 157
+[26-Feb-2026 16:02:19 Europe/Berlin] PHP Warning:  PDOStatement::execute(): Error reading result set's header in D:\WFS\htdocs\WFS-pr\backend\api\shipment\create.php on line 157
+[26-Feb-2026 16:03:13 Europe/Berlin] PHP Warning:  PDOStatement::execute(): MySQL server has gone away in D:\WFS\htdocs\WFS-pr\backend\api\shipment\create.php on line 157
+[26-Feb-2026 16:03:13 Europe/Berlin] PHP Warning:  PDOStatement::execute(): Error reading result set's header in D:\WFS\htdocs\WFS-pr\backend\api\shipment\create.php on line 157

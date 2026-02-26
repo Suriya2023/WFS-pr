@@ -6,10 +6,10 @@ require_once __DIR__ . '/../../config.php';
 $authHeader = '';
 if (function_exists('apache_request_headers')) {
     $headers = apache_request_headers();
-    $authHeader = $headers['Authorization'] ?? '';
+    $authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : '';
 }
 if (!$authHeader) {
-    $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
+    $authHeader = isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION']) ? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] : '');
 }
 
 if (!$authHeader || !preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
@@ -17,7 +17,7 @@ if (!$authHeader || !preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
 }
 
 $tokenData = json_decode(base64_decode($matches[1]), true);
-$userId = $tokenData['id'] ?? null;
+$userId = isset($tokenData['id']) ? $tokenData['id'] : null;
 
 if (!$userId) {
     sendResponse(["message" => "Invalid token."], 401);
@@ -28,7 +28,7 @@ try {
     $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM shipments WHERE user_id = ?");
     $stmt->execute([$userId]);
     $res = $stmt->fetch();
-    $totalOrders = $res['total'] ?? 0;
+    $totalOrders = isset($res['total']) ? $res['total'] : 0;
 
     $reports = [];
     if ($totalOrders > 0) {

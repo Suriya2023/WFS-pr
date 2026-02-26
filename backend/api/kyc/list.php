@@ -1,22 +1,21 @@
 <?php
 // backend/api/kyc/list.php
-require_once '../../config.php';
+require_once __DIR__ . '/../../config.php';
 
 $token = verifyToken();
 if (!$token) {
-    sendResponse(["message" => "Unauthorized"], 401);
+    sendResponse(array("message" => "Unauthorized"), 401);
 }
 
-// Verify if admin (simplified for now, token decode logic)
 $tokenData = json_decode(base64_decode($token), true);
-$userId = $tokenData['id'] ?? null;
+$userId = isset($tokenData['id']) ? $tokenData['id'] : null;
 
-// Basic role check - should be improved with a proper check
 $stmt = $pdo->prepare("SELECT role FROM users WHERE id = ?");
-$stmt->execute([$userId]);
+$stmt->execute(array($userId));
 $user = $stmt->fetch();
-if ($user['role'] !== 'admin') {
-    sendResponse(["message" => "Forbidden"], 403);
+
+if (!$user || $user['role'] !== 'admin') {
+    sendResponse(array("message" => "Forbidden"), 403);
 }
 
 try {
@@ -32,13 +31,14 @@ try {
     $stmt->execute();
     $results = $stmt->fetchAll();
 
-    $formatted = array_map(function ($row) {
+    $formatted = array();
+    foreach ($results as $row) {
         $address = $row['address_details'];
         if ($address && strpos($address, '{') === 0) {
             try {
                 $addrObj = json_decode($address, true);
                 if ($addrObj) {
-                    $parts = [];
+                    $parts = array();
                     $normalized = array_change_key_case($addrObj, CASE_LOWER);
                     if (!empty($normalized['addressline1']))
                         $parts[] = $normalized['addressline1'];
@@ -50,27 +50,24 @@ try {
                         $parts[] = $normalized['state'];
                     if (!empty($normalized['pincode']))
                         $parts[] = $normalized['pincode'];
-
-                    if (!empty($parts)) {
+                    if (!empty($parts))
                         $address = implode(", ", $parts);
-                    }
                 }
             } catch (Exception $e) {
             }
         }
 
-        // Priority to kyc_record_status from kyc_details table
-        $finalStatus = $row['kyc_record_status'] ?: ($row['kyc_status'] ?: 'not_submitted');
+        $finalStatus = $row['kyc_record_status'] ? $row['kyc_record_status'] : ($row['kyc_status'] ? $row['kyc_status'] : 'not_submitted');
 
-        return [
-            '_id' => $row['k_id'] ?? 'user_' . $row['u_id'],
-            'fullName' => $row['full_name'] ?: ($row['firstname'] . ' ' . $row['lastname']),
-            'aadhaarNumber' => $row['aadhaar_number'] ?? '',
-            'panNumber' => $row['pan_number'] ?? '',
+        $formatted[] = array(
+            '_id' => $row['k_id'] ? $row['k_id'] : 'user_' . $row['u_id'],
+            'fullName' => $row['full_name'] ? $row['full_name'] : ($row['firstname'] . ' ' . $row['lastname']),
+            'aadhaarNumber' => $row['aadhaar_number'] ? $row['aadhaar_number'] : '',
+            'panNumber' => $row['pan_number'] ? $row['pan_number'] : '',
             'status' => $finalStatus,
-            'addressDetails' => $address ?: 'No Address Provided',
-            'submittedAt' => $row['submitted_at'] ?? null,
-            'user' => [
+            'addressDetails' => $address ? $address : 'No Address Provided',
+            'submittedAt' => $row['submitted_at'],
+            'user' => array(
                 'id' => $row['u_id'],
                 'firstname' => $row['firstname'],
                 'lastname' => $row['lastname'],
@@ -78,12 +75,12 @@ try {
                 'mobile' => $row['mobile'],
                 'company_name' => $row['company_name'],
                 'gst_number' => $row['gst_number']
-            ]
-        ];
-    }, $results);
+            )
+        );
+    }
 
     sendResponse($formatted);
 } catch (PDOException $e) {
-    sendResponse(["message" => "Database error: " . $e->getMessage()], 500);
+    sendResponse(array("message" => "Database error: " . $e->getMessage()), 500);
 }
 ?>

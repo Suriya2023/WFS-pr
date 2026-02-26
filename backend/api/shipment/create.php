@@ -6,22 +6,26 @@ require_once __DIR__ . '/../../config.php';
 $authHeader = '';
 if (function_exists('apache_request_headers')) {
     $headers = apache_request_headers();
-    $authHeader = $headers['Authorization'] ?? '';
+    $authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : '';
 }
 if (!$authHeader) {
-    $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
+    if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
+    } elseif (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+        $authHeader = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+    }
 }
 
 if (!$authHeader || !preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
-    sendResponse(["message" => "Unauthorized - No token found"], 401);
+    sendResponse(array("message" => "Unauthorized - No token found"), 401);
 }
 
 $tokenData = json_decode(base64_decode($matches[1]), true);
-$userId = $tokenData['id'] ?? null;
-$role = $tokenData['role'] ?? 'user';
+$userId = isset($tokenData['id']) ? $tokenData['id'] : null;
+$role = isset($tokenData['role']) ? $tokenData['role'] : 'user';
 
 if (!$userId) {
-    sendResponse(["message" => "Unauthorized - Invalid token data"], 401);
+    sendResponse(array("message" => "Unauthorized - Invalid token data"), 401);
 }
 
 // LOG INPUT FOR DEBUGGING
@@ -30,7 +34,7 @@ debugLog("CREATE SHIPMENT INPUT: " . $rawInput);
 
 $input = json_decode($rawInput, true);
 if (!$input) {
-    sendResponse(["message" => "Empty payload"], 400);
+    sendResponse(array("message" => "Empty payload"), 400);
 }
 
 // Allow Admin to create for specific user
@@ -38,55 +42,70 @@ if (isset($input['admin_user_id']) && $role === 'admin') {
     $userId = $input['admin_user_id'];
 }
 
-$consignee = $input['consignee'] ?? [];
-$consignee_name = trim(($consignee['firstName'] ?? '') . ' ' . ($consignee['lastName'] ?? ''));
-$consignee_phone = $consignee['mobile'] ?? '';
-$consignee_address = $consignee['address1'] ?? '';
-$destination_country = $consignee['country'] ?? 'India';
+$consignee = isset($input['consignee']) ? $input['consignee'] : array();
+$firstName = isset($consignee['firstName']) ? $consignee['firstName'] : '';
+$lastName = isset($consignee['lastName']) ? $consignee['lastName'] : '';
+$consignee_name = trim($firstName . ' ' . $lastName);
+$consignee_phone = isset($consignee['mobile']) ? $consignee['mobile'] : '';
+$consignee_address = isset($consignee['address1']) ? $consignee['address1'] : '';
+$destination_country = isset($consignee['country']) ? $consignee['country'] : 'India';
 
-$deadWeight = floatval($input['deadWeight'] ?? $input['weight'] ?? 0);
-$shippingCost = floatval($input['shippingCost'] ?? 0);
-$courierPartner = $input['courierPartner'] ?? '';
-$pickup_address_id = $input['pickupAddressId'] ?? null;
+$deadWeight = floatval(isset($input['deadWeight']) ? $input['deadWeight'] : (isset($input['weight']) ? $input['weight'] : 0));
+$shippingCost = floatval(isset($input['shippingCost']) ? $input['shippingCost'] : 0);
+$courierPartner = isset($input['courierPartner']) ? $input['courierPartner'] : '';
+$pickup_address_id = isset($input['pickupAddressId']) ? $input['pickupAddressId'] : null;
 if ($pickup_address_id === '')
     $pickup_address_id = null;
 
-$payment_id = $input['paymentId'] ?? $input['payment_id'] ?? null;
+$payment_id = isset($input['paymentId']) ? $input['paymentId'] : (isset($input['payment_id']) ? $input['payment_id'] : null);
 if ($payment_id === '')
     $payment_id = null;
 
-$payment_order_id = $input['paymentOrderId'] ?? $input['payment_order_id'] ?? null;
+$payment_order_id = isset($input['paymentOrderId']) ? $input['paymentOrderId'] : (isset($input['payment_order_id']) ? $input['payment_order_id'] : null);
 if ($payment_order_id === '')
     $payment_order_id = null;
 
-$payment_signature = $input['paymentSignature'] ?? $input['payment_signature'] ?? null;
+$payment_signature = isset($input['paymentSignature']) ? $input['paymentSignature'] : (isset($input['payment_signature']) ? $input['payment_signature'] : null);
 if ($payment_signature === '')
     $payment_signature = null;
 
-$items = json_encode($input['items'] ?? []);
-$status = $input['status'] ?? 'draft';
+$itemsArr = isset($input['items']) ? $input['items'] : array();
+$items = json_encode($itemsArr);
+$status = isset($input['status']) ? $input['status'] : 'draft';
 
 try {
     $pdo->beginTransaction();
 
-    if (($input['paymentMode'] ?? '') === 'Wallet' && $shippingCost > 0) {
+    $paymentMode = isset($input['paymentMode']) ? $input['paymentMode'] : '';
+    if ($paymentMode === 'Wallet' && $shippingCost > 0) {
         $stmt = $pdo->prepare("SELECT wallet_balance FROM users WHERE id = ? FOR UPDATE");
-        $stmt->execute([$userId]);
+        $stmt->execute(array($userId));
         $user = $stmt->fetch();
 
         if (!$user || $user['wallet_balance'] < $shippingCost) {
             $pdo->rollBack();
-            sendResponse(["message" => "Insufficient wallet balance."], 400);
+            sendResponse(array("message" => "Insufficient wallet balance."), 400);
         }
 
         $stmt = $pdo->prepare("UPDATE users SET wallet_balance = wallet_balance - ? WHERE id = ?");
-        $stmt->execute([$shippingCost, $userId]);
+        $stmt->execute(array($shippingCost, $userId));
 
-        $stmt = $pdo->prepare("INSERT INTO transactions (user_id, amount, type, description, status) VALUES (?, ?, 'debit', 'Shipment payment (Wallet)', 'success')");
-        $stmt->execute([$userId, $shippingCost]);
+        // Use correct table and column for transaction
+        $useWalletTrans = $pdo->query("SHOW TABLES LIKE 'wallet_transactions'")->fetch();
+        if ($useWalletTrans) {
+            $cols = $pdo->query("DESCRIBE `wallet_transactions`")->fetchAll(PDO::FETCH_COLUMN);
+            $descCol = in_array('reason', $cols) ? 'reason' : 'description';
+            $stmt = $pdo->prepare("INSERT INTO wallet_transactions (user_id, amount, type, `$descCol`) VALUES (?, ?, 'debit', 'Shipment payment (Wallet)')");
+            $stmt->execute(array($userId, $shippingCost));
+        } else {
+            $cols = $pdo->query("DESCRIBE `transactions`")->fetchAll(PDO::FETCH_COLUMN);
+            $descCol = in_array('description', $cols) ? 'description' : 'reason';
+            $stmt = $pdo->prepare("INSERT INTO transactions (user_id, amount, type, `$descCol`, status) VALUES (?, ?, 'debit', 'Shipment payment (Wallet)', 'success')");
+            $stmt->execute(array($userId, $shippingCost));
+        }
     }
 
-    // Populate redundant columns for compatibility with different dashboard versions
+    // Populate redundant columns for compatibility
     $sql = "INSERT INTO shipments (
         user_id, pickup_address_id, tracking_id, 
         consignee_name, consignee_phone, consignee_address,
@@ -97,45 +116,42 @@ try {
         courierPartner, payment_mode, payment_id, payment_order_id, payment_signature, items, status
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-    $pickupDetails = $input['pickupDetails'] ?? [];
-    $totalAmountValue = floatval($input['totalAmount'] ?? $input['total_amount'] ?? ($shippingCost * 1.18));
+    $pickupDetails = isset($input['pickupDetails']) ? $input['pickupDetails'] : array();
+    $totalAmountValue = floatval(isset($input['totalAmount']) ? $input['totalAmount'] : (isset($input['total_amount']) ? $input['total_amount'] : ($shippingCost * 1.18)));
 
-    // DEBUG: Final Params check
-    $params = [
+    $params = array(
         $userId,
         $pickup_address_id,
-        null, // tracking_id is null until admin verification
+        null,
         $consignee_name,
         $consignee_phone,
         $consignee_address,
-        $consignee['city'] ?? '',
-        $consignee['state'] ?? '',
-        $consignee['pincode'] ?? '',
-        $consignee['email'] ?? '',
+        isset($consignee['city']) ? $consignee['city'] : '',
+        isset($consignee['state']) ? $consignee['state'] : '',
+        isset($consignee['pincode']) ? $consignee['pincode'] : '',
+        isset($consignee['email']) ? $consignee['email'] : '',
         $consignee_name,
         $consignee_phone,
         $consignee_address,
-        $pickupDetails['name'] ?? '',
-        $pickupDetails['phone'] ?? '',
-        $pickupDetails['address'] ?? '',
-        $pickupDetails['city'] ?? '',
-        $pickupDetails['state'] ?? '',
-        $pickupDetails['pincode'] ?? '',
+        isset($pickupDetails['name']) ? $pickupDetails['name'] : '',
+        isset($pickupDetails['phone']) ? $pickupDetails['phone'] : '',
+        isset($pickupDetails['address']) ? $pickupDetails['address'] : '',
+        isset($pickupDetails['city']) ? $pickupDetails['city'] : '',
+        isset($pickupDetails['state']) ? $pickupDetails['state'] : '',
+        isset($pickupDetails['pincode']) ? $pickupDetails['pincode'] : '',
         $destination_country,
         $deadWeight,
         $deadWeight,
         $shippingCost,
         $totalAmountValue,
         $courierPartner,
-        $input['paymentMode'] ?? 'Prepaid',
+        $paymentMode ? $paymentMode : 'Prepaid',
         $payment_id,
         $payment_order_id,
         $payment_signature,
         $items,
         $status
-    ];
-
-    debugLog("INSERT PARAMS COUNT: " . count($params));
+    );
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
@@ -143,31 +159,24 @@ try {
     $shipmentId = $pdo->lastInsertId();
     $pdo->commit();
 
-    sendResponse([
+    sendResponse(array(
         "message" => "Shipment created successfully.",
         "status" => $status,
         "_id" => $shipmentId
-    ], 201);
+    ), 201);
 
 } catch (PDOException $e) {
     $err = $e->getMessage();
     debugLog("CREATE SHIPMENT SQL ERROR: " . $err);
     if ($pdo && $pdo->inTransaction()) {
-        try {
-            $pdo->rollBack();
-        } catch (Exception $rbEx) {
-            debugLog("Rollback failed: " . $rbEx->getMessage());
-        }
+        $pdo->rollBack();
     }
-    sendResponse(["message" => "Database Error: " . $err], 500);
+    sendResponse(array("message" => "Database Error: " . $err), 500);
 } catch (Exception $e) {
     debugLog("CREATE SHIPMENT GENERAL ERROR: " . $e->getMessage());
     if ($pdo && $pdo->inTransaction()) {
-        try {
-            $pdo->rollBack();
-        } catch (Exception $rbEx) {
-        }
+        $pdo->rollBack();
     }
-    sendResponse(["message" => "General Error: " . $e->getMessage()], 500);
+    sendResponse(array("message" => "General Error: " . $e->getMessage()), 500);
 }
 ?>

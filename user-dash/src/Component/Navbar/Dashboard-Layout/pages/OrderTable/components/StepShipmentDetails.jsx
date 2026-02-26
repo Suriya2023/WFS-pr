@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Package, Trash2, Edit, Plus, Info, ChevronRight, Layers, Box, Maximize, Weight, IndianRupee, Tag, ShieldAlert, Upload, Loader2 } from 'lucide-react';
 
 const StepShipmentDetails = ({
-    formData, currentItem, handleItemChange, addItem, removeItem, editItem, handleImageChange, removeImage, defaultItemValue
+    formData, currentItem, handleItemChange, addItem, removeItem, editItem, handleImageChange, removeImage, defaultItemValue, canEdit = true
 }) => {
     const [packingPref, setPackingPref] = useState('single'); // 'single' or 'multiple'
 
@@ -10,7 +10,7 @@ const StepShipmentDetails = ({
     const totalValue = formData.items.reduce((sum, item) => sum + parseFloat(item.value || 0), 0);
 
     return (
-        <div className="space-y-10 animate-in fade-in slide-in-from-bottom-5 duration-700">
+        <div className={`space-y-10 animate-in fade-in slide-in-from-bottom-5 duration-700 ${!canEdit ? 'pointer-events-none opacity-80' : ''}`}>
             {/* Header */}
             <div className="flex items-center gap-4">
                 <div className="w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center font-semibold text-sm">

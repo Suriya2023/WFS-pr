@@ -6,10 +6,10 @@ require_once __DIR__ . '/../../config.php';
 $authHeader = '';
 if (function_exists('apache_request_headers')) {
     $headers = apache_request_headers();
-    $authHeader = $headers['Authorization'] ?? '';
+    $authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : '';
 }
 if (!$authHeader) {
-    $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
+    $authHeader = isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION']) ? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] : '');
 }
 
 if (!$authHeader || !preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
@@ -17,17 +17,17 @@ if (!$authHeader || !preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
 }
 
 $tokenData = json_decode(base64_decode($matches[1]), true);
-$userId = $tokenData['id'] ?? null;
-$role = $tokenData['role'] ?? 'user';
+$userId = isset($tokenData['id']) ? $tokenData['id'] : null;
+$role = isset($tokenData['role']) ? $tokenData['role'] : 'user';
 
 if (!$userId)
     sendResponse(["message" => "Unauthorized"], 401);
 
 // Get the AWB/ID from URL if using rewrite, or from input
 // For simplicity, we'll check multiple sources
-$awb = $_GET['awb'] ?? null;
+$awb = isset($_GET['awb']) ? $_GET['awb'] : null;
 $input = json_decode(file_get_contents("php://input"), true);
-$reason = $input['reason'] ?? 'Customer request';
+$reason = isset($input['reason']) ? $input['reason'] : 'Customer request';
 
 if (!$awb) {
     // Check if it's in the path (api/shipment/{awb}/cancel)

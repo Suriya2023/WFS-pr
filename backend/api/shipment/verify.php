@@ -4,10 +4,10 @@ require_once '../../config.php';
 
 // Role Check (Should be admin)
 $headers = apache_request_headers();
-$token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
+$token = str_replace('Bearer ', '', isset($headers['Authorization']) ? $headers['Authorization'] : '');
 $tokenData = json_decode(base64_decode($token), true);
 
-$userId = $tokenData['id'] ?? null;
+$userId = isset($tokenData['id']) ? $tokenData['id'] : null;
 if (!$userId)
     sendResponse(["message" => "Unauthorized"], 401);
 
@@ -21,7 +21,7 @@ if (!$user || $user['role'] !== 'admin') {
 }
 
 $input = json_decode(file_get_contents("php://input"), true);
-$shipmentId = $input['shipment_id'] ?? null;
+$shipmentId = isset($input['shipment_id']) ? $input['shipment_id'] : null;
 
 if (!$shipmentId) {
     sendResponse(["message" => "Shipment ID is required."], 400);

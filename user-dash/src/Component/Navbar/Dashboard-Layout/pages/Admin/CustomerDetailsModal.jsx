@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, User, Package, Wallet, MapPin, FileText, Download, Loader2, Send } from 'lucide-react';
+import { X, User, Package, Wallet, MapPin, CreditCard, FileText, Download, Loader2, Send } from 'lucide-react';
 
 const ProfileTab = ({ customerData, onUpdate }) => {
     const [isEditing, setIsEditing] = useState(false);
@@ -54,90 +54,90 @@ const ProfileTab = ({ customerData, onUpdate }) => {
     };
 
     return (
-    <div className="space-y-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <User className="w-4 h-4 text-blue-600" />
-                    <h3 className="font-bold text-gray-900 text-sm">Basic Information</h3>
-                </div>
-                {isEditing ? (
+        <div className="space-y-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <button onClick={() => setIsEditing(false)} className="px-3 py-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-widest hover:bg-gray-100 rounded-lg transition-colors">Cancel</button>
-                        <button onClick={handleSave} disabled={isSaving} className="px-3 py-1.5 text-[10px] font-bold text-white uppercase tracking-widest bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm disabled:opacity-50 flex items-center gap-1">
-                            {isSaving && <Loader2 className="w-3 h-3 animate-spin" />}
-                            Save Actions
-                        </button>
+                        <User className="w-4 h-4 text-blue-600" />
+                        <h3 className="font-bold text-gray-900 text-sm">Basic Information</h3>
                     </div>
-                ) : (
-                    <button onClick={() => setIsEditing(true)} className="px-3 py-1.5 text-[10px] font-bold text-blue-600 uppercase tracking-widest hover:bg-blue-50 rounded-lg transition-colors">Edit</button>
-                )}
-            </div>
-            <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12">
-                    <div className="flex justify-between items-center border-b border-gray-50 pb-4">
-                        <span className="text-xs text-gray-500 font-semibold w-1/3">Full Name</span>
-                        {isEditing ? (
-                            <div className="flex gap-2 flex-1 justify-end">
-                                <input type="text" value={formData.firstname} onChange={e => setFormData({ ...formData, firstname: e.target.value })} className="bg-gray-50 border border-gray-200 rounded px-2 py-1 text-sm font-bold text-gray-900 outline-none w-1/2" placeholder="First Name"/>
-                                <input type="text" value={formData.lastname} onChange={e => setFormData({ ...formData, lastname: e.target.value })} className="bg-gray-50 border border-gray-200 rounded px-2 py-1 text-sm font-bold text-gray-900 outline-none w-1/2" placeholder="Last Name"/>
-                            </div>
-                        ) : (
-                            <span className="text-sm font-bold text-gray-900 text-right">{customerData.firstname} {customerData.lastname}</span>
-                        )}
-                    </div>
-                    <div className="flex justify-between items-center border-b border-gray-50 pb-4">
-                        <span className="text-xs text-gray-500 font-semibold w-1/3">Email Address</span>
-                        {isEditing ? (
-                            <input type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="bg-gray-50 border border-gray-200 rounded px-2 py-1 text-sm font-medium text-gray-900 outline-none w-2/3 text-right" />
-                        ) : (
-                            <span className="text-sm font-medium text-gray-900 text-right">{customerData.email}</span>
-                        )}
-                    </div>
-                    <div className="flex justify-between items-center border-b border-gray-50 pb-4">
-                        <span className="text-xs text-gray-500 font-semibold w-1/3">Mobile Number</span>
-                        {isEditing ? (
-                            <input type="tel" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="bg-gray-50 border border-gray-200 rounded px-2 py-1 text-sm font-medium text-gray-900 outline-none w-2/3 text-right" />
-                        ) : (
-                            <span className="text-sm font-medium text-gray-900 text-right">{customerData.phone || 'N/A'}</span>
-                        )}
-                    </div>
-                    <div className="flex justify-between items-center border-b border-gray-50 pb-4">
-                        <span className="text-xs text-gray-500 font-semibold w-1/3">Customer ID</span>
-                        <span className="text-sm font-medium text-gray-900 font-mono text-xs text-right">{customerData.id}</span>
-                    </div>
-                    <div className="flex justify-between items-center border-b border-gray-50 pb-4">
-                        <span className="text-xs text-gray-500 font-semibold w-1/3">Joined Date</span>
-                        <span className="text-sm font-medium text-gray-900 text-right">
-                            {customerData.created_at ? new Date(customerData.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : 'N/A'}
-                        </span>
-                    </div>
-                    <div className="flex justify-between items-center border-b border-gray-50 pb-4">
-                        <span className="text-xs text-gray-500 font-semibold w-1/3">Account Status</span>
-                        <span className={`px-3 py-1 text-[10px] uppercase font-bold rounded-full text-right ${customerData.is_blocked ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
-                            {customerData.is_blocked ? 'Suspended' : 'Active'}
-                        </span>
+                    {isEditing ? (
+                        <div className="flex items-center gap-2">
+                            <button onClick={() => setIsEditing(false)} className="px-3 py-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-widest hover:bg-gray-100 rounded-lg transition-colors">Cancel</button>
+                            <button onClick={handleSave} disabled={isSaving} className="px-3 py-1.5 text-[10px] font-bold text-white uppercase tracking-widest bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm disabled:opacity-50 flex items-center gap-1">
+                                {isSaving && <Loader2 className="w-3 h-3 animate-spin" />}
+                                Save Actions
+                            </button>
+                        </div>
+                    ) : (
+                        <button onClick={() => setIsEditing(true)} className="px-3 py-1.5 text-[10px] font-bold text-blue-600 uppercase tracking-widest hover:bg-blue-50 rounded-lg transition-colors">Edit</button>
+                    )}
+                </div>
+                <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12">
+                        <div className="flex justify-between items-center border-b border-gray-50 pb-4">
+                            <span className="text-xs text-gray-500 font-semibold w-1/3">Full Name</span>
+                            {isEditing ? (
+                                <div className="flex gap-2 flex-1 justify-end">
+                                    <input type="text" value={formData.firstname} onChange={e => setFormData({ ...formData, firstname: e.target.value })} className="bg-gray-50 border border-gray-200 rounded px-2 py-1 text-sm font-bold text-gray-900 outline-none w-1/2" placeholder="First Name" />
+                                    <input type="text" value={formData.lastname} onChange={e => setFormData({ ...formData, lastname: e.target.value })} className="bg-gray-50 border border-gray-200 rounded px-2 py-1 text-sm font-bold text-gray-900 outline-none w-1/2" placeholder="Last Name" />
+                                </div>
+                            ) : (
+                                <span className="text-sm font-bold text-gray-900 text-right">{customerData.firstname} {customerData.lastname}</span>
+                            )}
+                        </div>
+                        <div className="flex justify-between items-center border-b border-gray-50 pb-4">
+                            <span className="text-xs text-gray-500 font-semibold w-1/3">Email Address</span>
+                            {isEditing ? (
+                                <input type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="bg-gray-50 border border-gray-200 rounded px-2 py-1 text-sm font-medium text-gray-900 outline-none w-2/3 text-right" />
+                            ) : (
+                                <span className="text-sm font-medium text-gray-900 text-right">{customerData.email}</span>
+                            )}
+                        </div>
+                        <div className="flex justify-between items-center border-b border-gray-50 pb-4">
+                            <span className="text-xs text-gray-500 font-semibold w-1/3">Mobile Number</span>
+                            {isEditing ? (
+                                <input type="tel" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="bg-gray-50 border border-gray-200 rounded px-2 py-1 text-sm font-medium text-gray-900 outline-none w-2/3 text-right" />
+                            ) : (
+                                <span className="text-sm font-medium text-gray-900 text-right">{customerData.phone || 'N/A'}</span>
+                            )}
+                        </div>
+                        <div className="flex justify-between items-center border-b border-gray-50 pb-4">
+                            <span className="text-xs text-gray-500 font-semibold w-1/3">Customer ID</span>
+                            <span className="text-sm font-medium text-gray-900 font-mono text-xs text-right">{customerData.id}</span>
+                        </div>
+                        <div className="flex justify-between items-center border-b border-gray-50 pb-4">
+                            <span className="text-xs text-gray-500 font-semibold w-1/3">Joined Date</span>
+                            <span className="text-sm font-medium text-gray-900 text-right">
+                                {customerData.created_at ? new Date(customerData.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : 'N/A'}
+                            </span>
+                        </div>
+                        <div className="flex justify-between items-center border-b border-gray-50 pb-4">
+                            <span className="text-xs text-gray-500 font-semibold w-1/3">Account Status</span>
+                            <span className={`px-3 py-1 text-[10px] uppercase font-bold rounded-full text-right ${customerData.is_blocked ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
+                                {customerData.is_blocked ? 'Suspended' : 'Active'}
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <Wallet className="w-4 h-4 text-blue-600" />
-                    <h3 className="font-bold text-gray-900 text-sm">Wallet Summary</h3>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <Wallet className="w-4 h-4 text-blue-600" />
+                        <h3 className="font-bold text-gray-900 text-sm">Wallet Summary</h3>
+                    </div>
+                    <button className="text-[10px] font-bold text-blue-600 uppercase tracking-widest hover:underline">View Full History</button>
                 </div>
-                <button className="text-[10px] font-bold text-blue-600 uppercase tracking-widest hover:underline">View Full History</button>
-            </div>
-            <div className="p-6">
-                <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500 font-semibold">Current Balance</span>
-                    <span className="text-xl font-black text-green-600 tracking-tight">₹{parseFloat(customerData.wallet_balance || 0).toLocaleString()}</span>
+                <div className="p-6">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500 font-semibold">Current Balance</span>
+                        <span className="text-xl font-black text-green-600 tracking-tight">₹{parseFloat(customerData.wallet_balance || 0).toLocaleString()}</span>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
     );
 };
 
@@ -220,7 +220,198 @@ const AddressesTab = ({ addresses }) => (
     </div>
 );
 
-const KycTab = ({ customerData }) => <div className="p-10 text-center text-gray-500 font-medium text-sm">KYC Status: <span className="font-bold text-gray-900 uppercase">{customerData.kyc_status || 'Pending'}</span></div>;
+const KycTab = ({ customerData, onUpdate }) => {
+    const [kycDetails, setKycDetails] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [isEditing, setIsEditing] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [editStatus, setEditStatus] = useState(customerData.kyc_status || 'not_submitted');
+
+    const fetchKycDetails = async () => {
+        setLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/kyc/details.php?user_id=${customerData.id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            setKycDetails(data);
+            setEditStatus(data.status || 'not_submitted');
+        } catch (e) {
+            console.error('KYC details fetch error', e);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchKycDetails();
+    }, [customerData.id]);
+
+    const handleUpdateStatus = async () => {
+        setIsSaving(true);
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/admin/user_action.php`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    action: 'update',
+                    user_id: customerData.id,
+                    firstname: customerData.firstname,
+                    lastname: customerData.lastname,
+                    email: customerData.email,
+                    mobile: customerData.mobile || customerData.phone,
+                    kyc_status: editStatus
+                })
+            });
+            const data = await res.json();
+            if (data.message.includes('successfully')) {
+                alert('KYC Status updated!');
+                setIsEditing(false);
+                if (onUpdate) onUpdate({ kyc_status: editStatus });
+            } else {
+                alert(data.message || 'Update failed');
+            }
+        } catch (e) {
+            console.error('Update error', e);
+            alert('Status update failed');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    if (loading) return (
+        <div className="flex flex-col items-center justify-center p-20">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-600 mb-4" />
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Loading KYC Dossier...</p>
+        </div>
+    );
+
+    return (
+        <div className="space-y-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-blue-600" />
+                        <h3 className="font-bold text-gray-900 text-sm">KYC Verification Dossier</h3>
+                    </div>
+                    {isEditing ? (
+                        <div className="flex items-center gap-2">
+                            <button onClick={() => setIsEditing(false)} className="px-3 py-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-widest hover:bg-gray-100 rounded-lg transition-colors">Cancel</button>
+                            <button onClick={handleUpdateStatus} disabled={isSaving} className="px-3 py-1.5 text-[10px] font-bold text-white uppercase tracking-widest bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm disabled:opacity-50 flex items-center gap-1">
+                                {isSaving && <Loader2 className="w-3 h-3 animate-spin" />}
+                                {isSaving ? 'Saving...' : 'Confirm Update'}
+                            </button>
+                        </div>
+                    ) : (
+                        <button onClick={() => setIsEditing(true)} className="px-3 py-1.5 text-[10px] font-bold text-blue-600 uppercase tracking-widest hover:bg-blue-50 rounded-lg transition-colors">Edit Status</button>
+                    )}
+                </div>
+
+                <div className="p-8 border-b border-gray-50 flex items-center justify-between bg-blue-50/10">
+                    <div>
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Current Status</p>
+                        {isEditing ? (
+                            <select
+                                value={editStatus}
+                                onChange={(e) => setEditStatus(e.target.value)}
+                                className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold text-gray-900 outline-none focus:ring-2 focus:ring-blue-500/20"
+                            >
+                                <option value="not_submitted">Not Submitted</option>
+                                <option value="pending">Pending Verification</option>
+                                <option value="verified">Verified ✅</option>
+                                <option value="rejected">Rejected ❌</option>
+                            </select>
+                        ) : (
+                            <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.1em] ${editStatus === 'verified' ? 'bg-green-100 text-green-700' :
+                                editStatus === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                                    'bg-gray-100 text-gray-700'
+                                }`}>
+                                {editStatus}
+                            </span>
+                        )}
+                    </div>
+                    <div className="text-right">
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Account Type</p>
+                        <p className="text-sm font-bold text-gray-900 uppercase">{kycDetails?.account_type || 'Personal'}</p>
+                    </div>
+                </div>
+
+                <div className="p-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-4">
+                            <h4 className="text-[11px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
+                                <CreditCard className="w-3.5 h-3.5 text-blue-500" />
+                                Aadhaar Details
+                            </h4>
+                            <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Aadhaar Number</p>
+                                <p className="text-sm font-mono font-bold text-gray-900 tracking-wider">
+                                    {kycDetails?.aadhaarNumber ? kycDetails.aadhaarNumber.replace(/(\d{4})/g, '$1 ').trim() : 'NOT PROVIDED'}
+                                </p>
+                            </div>
+                            <div className="flex gap-4">
+                                {kycDetails?.aadhaarFrontImage && (
+                                    <div className="flex-1 space-y-2">
+                                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Front View</p>
+                                        <a href={`${import.meta.env.VITE_API_BASE_URL}/${kycDetails.aadhaarFrontImage}`} target="_blank" rel="noreferrer" className="block aspect-[3/2] rounded-lg border-2 border-dashed border-gray-200 overflow-hidden hover:border-blue-300 transition-colors bg-gray-50">
+                                            <img src={`${import.meta.env.VITE_API_BASE_URL}/${kycDetails.aadhaarFrontImage}`} alt="Front" className="w-full h-full object-contain" />
+                                        </a>
+                                    </div>
+                                )}
+                                {kycDetails?.aadhaarBackImage && (
+                                    <div className="flex-1 space-y-2">
+                                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Back View</p>
+                                        <a href={`${import.meta.env.VITE_API_BASE_URL}/${kycDetails.aadhaarBackImage}`} target="_blank" rel="noreferrer" className="block aspect-[3/2] rounded-lg border-2 border-dashed border-gray-200 overflow-hidden hover:border-blue-300 transition-colors bg-gray-50">
+                                            <img src={`${import.meta.env.VITE_API_BASE_URL}/${kycDetails.aadhaarBackImage}`} alt="Back" className="w-full h-full object-contain" />
+                                        </a>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <h4 className="text-[11px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
+                                <FileText className="w-3.5 h-3.5 text-orange-500" />
+                                Permanent Account (PAN)
+                            </h4>
+                            <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">PAN Number</p>
+                                <p className="text-sm font-mono font-bold text-gray-900 tracking-widest uppercase">
+                                    {kycDetails?.panNumber || 'NOT PROVIDED'}
+                                </p>
+                            </div>
+                            {kycDetails?.panCardImage && (
+                                <div className="space-y-2">
+                                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">PAN Card Scan</p>
+                                    <a href={`${import.meta.env.VITE_API_BASE_URL}/${kycDetails.panCardImage}`} target="_blank" rel="noreferrer" className="block aspect-[3/2] rounded-lg border-2 border-dashed border-gray-200 overflow-hidden hover:border-blue-300 transition-colors bg-gray-50">
+                                        <img src={`${import.meta.env.VITE_API_BASE_URL}/${kycDetails.panCardImage}`} alt="PAN" className="w-full h-full object-contain" />
+                                    </a>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="mt-8 pt-8 border-t border-gray-100">
+                        <h4 className="text-[11px] font-black text-gray-900 uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <Home className="w-3.5 h-3.5 text-green-500" />
+                            Registered Address
+                        </h4>
+                        <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
+                            <p className="text-sm font-medium text-gray-600 leading-relaxed">
+                                {kycDetails?.addressDetails || 'NO ADDRESS SPECIFIED'}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
 const PaymentsTab = () => <div className="p-10 text-center text-gray-500 font-medium text-sm">Payment links will appear here.</div>;
 
 const CustomerDetailsModal = ({ selectedUser, setSelectedUser }) => {
@@ -338,7 +529,10 @@ const CustomerDetailsModal = ({ selectedUser, setSelectedUser }) => {
                             {activeTab === 'orders' && <OrdersTab customerData={customerData} orders={orders} />}
                             {activeTab === 'wallet' && <WalletTab customerData={customerData} />}
                             {activeTab === 'addresses' && <AddressesTab customerData={customerData} addresses={addresses} refreshAddresses={fetchUserData} />}
-                            {activeTab === 'kyc' && <KycTab customerData={customerData} />}
+                            {activeTab === 'kyc' && <KycTab customerData={customerData} onUpdate={(statusUpdate) => {
+                                setCustomerData(prev => ({ ...prev, ...statusUpdate }));
+                                setSelectedUser(prev => ({ ...prev, ...statusUpdate }));
+                            }} />}
                             {activeTab === 'payments' && <PaymentsTab customerData={customerData} />}
                         </div>
                     ) : (

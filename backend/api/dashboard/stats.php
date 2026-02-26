@@ -3,12 +3,12 @@
 require_once '../../config.php';
 
 $headers = apache_request_headers();
-$authHeader = $headers['Authorization'] ?? '';
+$authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : '';
 if (!preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
     sendResponse(["message" => "Unauthorized"], 401);
 }
 $tokenData = json_decode(base64_decode($matches[1]), true);
-$userId = $tokenData['id'] ?? null;
+$userId = isset($tokenData['id']) ? $tokenData['id'] : null;
 
 try {
     // AUTO-FIX: Ensure transactions table exists
@@ -47,18 +47,18 @@ try {
 
     sendResponse([
         "user" => [
-            "name" => ($user['firstname'] ?? 'User') . ' ' . ($user['lastname'] ?? ''),
-            "kycStatus" => $user['kyc_status'] ?? 'not_submitted',
-            "walletBalance" => $user['wallet_balance'] ?? 0
+            "name" => (isset($user['firstname']) ? $user['firstname'] : 'User') . ' ' . (isset($user['lastname']) ? $user['lastname'] : ''),
+            "kycStatus" => isset($user['kyc_status']) ? $user['kyc_status'] : 'not_submitted',
+            "walletBalance" => isset($user['wallet_balance']) ? $user['wallet_balance'] : 0
         ],
         "orders" => [
             "total" => array_sum($orderStats),
-            "draft" => $orderStats['draft'] ?? 0,
-            "ready" => $orderStats['ready'] ?? 0,
-            "packed" => $orderStats['packed'] ?? 0,
-            "dispatched" => $orderStats['dispatched'] ?? 0,
-            "manifested" => $orderStats['manifested'] ?? 0,
-            "disputed" => $orderStats['disputed'] ?? 0
+            "draft" => isset($orderStats['draft']) ? $orderStats['draft'] : 0,
+            "ready" => isset($orderStats['ready']) ? $orderStats['ready'] : 0,
+            "packed" => isset($orderStats['packed']) ? $orderStats['packed'] : 0,
+            "dispatched" => isset($orderStats['dispatched']) ? $orderStats['dispatched'] : 0,
+            "manifested" => isset($orderStats['manifested']) ? $orderStats['manifested'] : 0,
+            "disputed" => isset($orderStats['disputed']) ? $orderStats['disputed'] : 0
         ],
         "walletActivity" => $walletActivity
     ]);

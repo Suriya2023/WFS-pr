@@ -13,7 +13,7 @@ try {
 
 } catch (Exception $e) {
     echo "Failed to set Global: " . $e->getMessage() . "\n";
-    echo "You must manually edit your xampp/mysql/bin/my.ini file.\n";
+    echo "You must manually edit your WFS/mysql/bin/my.ini file.\n";
     echo "Find [mysqld] section and add/change: max_allowed_packet=16M\n";
 }
 ?>

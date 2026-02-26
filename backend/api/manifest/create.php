@@ -3,7 +3,7 @@
 require_once '../../config.php';
 
 $input = json_decode(file_get_contents("php://input"), true);
-$shipmentIds = $input['shipment_ids'] ?? []; // Array of IDs
+$shipmentIds = isset($input['shipment_ids']) ? $input['shipment_ids'] : []; // Array of IDs
 
 if (empty($shipmentIds)) {
     sendResponse(["message" => "No shipments selected for manifesting"], 400);

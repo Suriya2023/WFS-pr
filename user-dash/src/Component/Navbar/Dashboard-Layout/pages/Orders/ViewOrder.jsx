@@ -72,7 +72,33 @@ const ViewOrder = ({ orderId, onBack }) => {
         }).toLowerCase();
     };
 
-    const items = Array.isArray(order.items) ? order.items : [];
+    let items = [];
+    try {
+        items = Array.isArray(order.items) ? order.items : (typeof order.items === 'string' ? JSON.parse(order.items) : []);
+    } catch (e) {
+        console.error("Error parsing items:", e);
+        items = [];
+    }
+
+    const getItemImage = (img) => {
+        if (!img) return null;
+        if (img.startsWith('data:image')) return img;
+        if (img.startsWith('http')) return img;
+
+        let path = img;
+        // Strip leading slash if any
+        if (path.startsWith('/')) path = path.substring(1);
+
+        // Base URL logic - remove trailing /api or similar if present
+        const baseUrl = import.meta.env.VITE_API_BASE_URL.replace(/\/api$/, '').replace(/\/+$/, '');
+
+        // If the path already starts with 'backend/' and baseUrl already ends with '/backend', don't double it
+        if (path.startsWith('backend/') && baseUrl.endsWith('/backend')) {
+            return `${baseUrl.substring(0, baseUrl.length - 8)}/${path}`;
+        }
+
+        return `${baseUrl}/${path}`;
+    };
     const deadWeight = parseFloat(order.weight || 0);
     const volumetricWeight = items.reduce((sum, item) => {
         const l = parseFloat(item.length || 0);
@@ -227,7 +253,9 @@ const ViewOrder = ({ orderId, onBack }) => {
                             <div className="flex items-center gap-3">
                                 <Package className="w-5 h-5 text-slate-400" />
                                 <h3 className="text-sm font-bold text-slate-900 uppercase tracking-tight">Shipment Content</h3>
-                                <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[9px] font-black uppercase tracking-widest rounded-lg border border-blue-100">SINGLE BOX</span>
+                                <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[9px] font-black uppercase tracking-widest rounded-lg border border-blue-100">
+                                    {items.length > 1 ? 'MULTI BOX' : 'SINGLE BOX'}
+                                </span>
                             </div>
                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{items.length} Items</span>
                         </div>
@@ -247,21 +275,26 @@ const ViewOrder = ({ orderId, onBack }) => {
                                     {items.map((item, idx) => (
                                         <tr key={idx} className="group transition-colors">
                                             <td className="py-6">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-slate-200 group-hover:bg-blue-50 group-hover:text-blue-500 transition-all duration-500 overflow-hidden border border-slate-100/50">
+                                                <div className="flex items-center gap-6">
+                                                    <div className="flex -space-x-6 hover:space-x-1 transition-all duration-500">
                                                         {(item.images && item.images.length > 0) ? (
-                                                            <img
-                                                                src={`${import.meta.env.VITE_API_BASE_URL.replace('/api', '').replace('/backend', '')}${item.images[0]}`}
-                                                                alt={item.name}
-                                                                className="w-full h-full object-cover"
-                                                                onError={(e) => {
-                                                                    e.target.onerror = null;
-                                                                    e.target.src = ''; // Fallback to icon if image fails
-                                                                    e.target.parentElement.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>';
-                                                                }}
-                                                            />
+                                                            item.images.slice(0, 2).map((img, imgIdx) => (
+                                                                <div key={imgIdx} className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-200 overflow-hidden border-2 border-white shadow-lg shadow-slate-200/50 transition-all duration-300 hover:scale-110 hover:z-20">
+                                                                    <img
+                                                                        src={getItemImage(img)}
+                                                                        alt={item.name}
+                                                                        className="w-full h-full object-cover"
+                                                                        onError={(e) => {
+                                                                            e.target.onerror = null;
+                                                                            e.target.src = 'https://via.placeholder.com/100?text=BOX';
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                            ))
                                                         ) : (
-                                                            <Box className="w-5 h-5" />
+                                                            <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-200 border border-slate-100/50">
+                                                                <Box className="w-6 h-6" />
+                                                            </div>
                                                         )}
                                                     </div>
                                                     <div>

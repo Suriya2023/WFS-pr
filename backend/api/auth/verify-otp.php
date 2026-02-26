@@ -5,8 +5,8 @@ require_once '../../config.php';
 debugLog("VERIFY OTP REQUEST: " . file_get_contents("php://input"));
 
 $input = json_decode(file_get_contents("php://input"), true);
-$email = $input['email'] ?? '';
-$otp = $input['otp'] ?? '';
+$email = isset($input['email']) ? $input['email'] : '';
+$otp = isset($input['otp']) ? $input['otp'] : '';
 
 if (!$email || !$otp) {
     debugLog("VERIFY OTP FAILED: Missing Email or OTP");
@@ -35,8 +35,8 @@ try {
     }
 
     // 3. Move to main users table
-    $stmt = $pdo->prepare("INSERT INTO users (firstname, lastname, email, mobile, password, role, is_verified) 
-                          VALUES (?, ?, ?, ?, ?, 'user', 1)");
+    $stmt = $pdo->prepare("INSERT INTO users (firstname, lastname, email, mobile, password, role)
+                          VALUES (?, ?, ?, ?, ?, 'user')");
     $stmt->execute([
         $pendingUser['firstname'],
         $pendingUser['lastname'],
@@ -53,7 +53,11 @@ try {
     sendResponse(["message" => "Email verified and registration complete. You can now login.", "success" => true]);
 
 } catch (PDOException $e) {
-    $pdo->rollBack();
+    try {
+        $pdo->rollBack();
+    } catch (Exception $re) {
+    }
+    debugLog("VERIFY OTP DB ERROR: " . $e->getMessage());
     sendResponse(["message" => "Verification failed: " . $e->getMessage()], 500);
 }
 ?>

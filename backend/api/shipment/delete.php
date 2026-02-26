@@ -2,10 +2,10 @@
 require_once '../../config.php';
 
 // Auth Check using the same logic as config.php's verifyToken()
-$authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
+$authHeader = isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION']) ? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] : '');
 if (!$authHeader && function_exists('apache_request_headers')) {
     $headers = apache_request_headers();
-    $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+    $authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : (isset($headers['authorization']) ? $headers['authorization'] : '');
 }
 
 if (!preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
@@ -14,7 +14,7 @@ if (!preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
 
 $token = $matches[1];
 $tokenData = json_decode(base64_decode($token), true);
-$adminId = $tokenData['id'] ?? null;
+$adminId = isset($tokenData['id']) ? $tokenData['id'] : null;
 
 if (!$adminId)
     sendResponse(["message" => "Unauthorized"], 401);
@@ -27,7 +27,7 @@ if (!$admin || $admin['role'] !== 'admin')
     sendResponse(["message" => "Forbidden - Admin access required"], 403);
 
 $input = json_decode(file_get_contents("php://input"), true);
-$shipmentId = $input['shipment_id'] ?? $input['id'] ?? $_GET['id'] ?? null;
+$shipmentId = isset($input['shipment_id']) ? $input['shipment_id'] : (isset($input['id']) ? $input['id'] : isset($_GET['id'])) ? $_GET['id'] : null;
 
 if (!$shipmentId)
     sendResponse(["message" => "Shipment ID required"], 400);

@@ -11,7 +11,7 @@ import StepShipmentDetails from './components/StepShipmentDetails';
 import StepServiceSelection from './components/StepServiceSelection';
 import StepPaymentSummary from './components/StepPaymentSummary';
 
-function AddOrderModal({ onClose, onSuccess, setActiveRoute, user, editOrder, adminUserId }) {
+function AddOrderModal({ onClose, onSuccess, setActiveRoute, user, editOrder, adminUserId, refreshOrders }) {
     const [currentStep, setCurrentStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [addresses, setAddresses] = useState([]);
@@ -65,6 +65,8 @@ function AddOrderModal({ onClose, onSuccess, setActiveRoute, user, editOrder, ad
     const [pincodeLoading, setPincodeLoading] = useState(false);
     const [walletBalance, setWalletBalance] = useState(0);
 
+    const canEdit = userRole === 'admin' || !editOrder || (!editOrder.tracking_id && ['draft', 'pending_payment', 'paid'].includes(editOrder.status));
+
     const [currentItem, setCurrentItem] = useState({
         name: '', quantity: 1, weight: '', value: '', length: '', breadth: '', height: '',
         hsCode: '', productType: '', category: 'General', images: [], imageFiles: [], imagePreviews: []
@@ -88,8 +90,16 @@ function AddOrderModal({ onClose, onSuccess, setActiveRoute, user, editOrder, ad
             const firstName = nameParts[0] || '';
             const lastName = nameParts.slice(1).join(' ') || '';
 
-            const items = Array.isArray(editOrder.items) ? editOrder.items :
-                (typeof editOrder.items === 'string' ? JSON.parse(editOrder.items || '[]') : []);
+            let items = [];
+            try {
+                items = Array.isArray(editOrder.items) ? editOrder.items :
+                    (typeof editOrder.items === 'string' ? JSON.parse(editOrder.items || '[]') : []);
+            } catch (jsonErr) {
+                console.warn('Truncated JSON items detected, attempting to use partial data');
+                // If it fails, editOrder.items might already be an empty array from backend repair, 
+                // or we fallback to empty here.
+                items = [];
+            }
 
             // Check if we should show manual pickup address
             const hasId = !!editOrder.pickup_address_id;
@@ -257,15 +267,44 @@ function AddOrderModal({ onClose, onSuccess, setActiveRoute, user, editOrder, ad
         if (!currentItem.name || !currentItem.weight || !currentItem.value) return alert('Fill core item details');
         if (currentItem.imageFiles.length + currentItem.images.length < 2) return alert('Min 2 photos required');
 
-        let urls = [...currentItem.images];
-        if (currentItem.imageFiles.length > 0) {
-            const res = await uploadImages();
-            if (!res.success) return;
-            urls = [...urls, ...res.urls];
-        }
+        setLoading(true);
+        try {
+            let urls = [...currentItem.images];
+            if (currentItem.imageFiles.length > 0) {
+                const res = await uploadImages();
+                if (!res.success) {
+                    setLoading(false);
+                    return;
+                }
+                urls = [...urls, ...res.urls];
+            }
 
-        setFormData(p => ({ ...p, items: [...p.items, { ...currentItem, images: urls }] }));
-        setCurrentItem({ name: '', quantity: 1, weight: '', value: '', length: '', breadth: '', height: '', hsCode: '', productType: '', category: 'General', images: [], imageFiles: [], imagePreviews: [] });
+            // Create a clean item object for the list (don't save base64 previews or file objects)
+            const cleanItem = {
+                name: currentItem.name,
+                quantity: currentItem.quantity,
+                weight: currentItem.weight,
+                value: currentItem.value,
+                length: currentItem.length,
+                breadth: currentItem.breadth,
+                height: currentItem.height,
+                hsCode: currentItem.hsCode,
+                productType: currentItem.productType,
+                category: currentItem.category,
+                images: urls
+            };
+
+            setFormData(p => ({ ...p, items: [...p.items, cleanItem] }));
+            setCurrentItem({
+                name: '', quantity: 1, weight: '', value: '', length: '', breadth: '', height: '',
+                hsCode: '', productType: '', category: 'General', images: [], imageFiles: [], imagePreviews: []
+            });
+        } catch (err) {
+            console.error(err);
+            alert('Failed to process item images.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const loadRazorpay = () => {
@@ -295,10 +334,15 @@ function AddOrderModal({ onClose, onSuccess, setActiveRoute, user, editOrder, ad
         }
 
         const isPayLater = type === 'PayLater';
+        const isUpdate = type === 'Update';
+        const isSaveDraft = type === 'SaveAsDraft';
         const isWallet = formData.paymentMode === 'Wallet';
         const isPrepaid = formData.paymentMode === 'Prepaid';
 
-        if (!selectedRate) return alert('Please select a shipping service first');
+        // Relax selectedRate requirement for simple updates/drafts
+        if (!selectedRate && !isUpdate && !isSaveDraft) {
+            return alert('Please select a shipping service first');
+        }
 
         // Calculate total weight and amount WITH VALIDATION
         const totalWeight = formData.items.reduce((sum, item) => {
@@ -306,17 +350,17 @@ function AddOrderModal({ onClose, onSuccess, setActiveRoute, user, editOrder, ad
             return sum + (isNaN(w) ? 0 : w);
         }, 0);
 
-        const baseCost = parseFloat(selectedRate.estimatedCost || selectedRate.price || 0);
+        const baseCost = parseFloat(selectedRate?.estimatedCost || selectedRate?.price || 0);
         const shippingCost = isNaN(baseCost) ? 0 : baseCost;
         const totalAmount = shippingCost * 1.18; // 18% GST
 
-        // Wallet balance check (only for Pay Wallet mode)
-        if (!isPayLater && isWallet && walletBalance < totalAmount) {
+        // Wallet balance check (only for Pay Wallet mode - skipped on simple updates/drafts)
+        if (!isPayLater && !isUpdate && !isSaveDraft && isWallet && walletBalance < totalAmount) {
             return alert(`Insufficient wallet balance. You need ₹${totalAmount.toFixed(2)} but have ₹${walletBalance.toFixed(2)}.`);
         }
 
-        // If Pay Now is selected and no payment details yet, trigger Razorpay
-        if (!isPayLater && isPrepaid && !paymentDetails) {
+        // If Pay Now is selected and no payment details yet, trigger Razorpay (skipped on simple updates/drafts)
+        if (!isPayLater && !isUpdate && !isSaveDraft && isPrepaid && !paymentDetails) {
             setProcessingPayment(true);
             try {
                 const loaded = await loadRazorpay();
@@ -384,6 +428,18 @@ function AddOrderModal({ onClose, onSuccess, setActiveRoute, user, editOrder, ad
                 pincode: selectedAddress.pincode || ''
             } : {};
 
+            // Determine Target Status
+            let targetStatus = 'draft';
+            if (isUpdate && editOrder) {
+                targetStatus = editOrder.status; // Keep existing status (paid stays paid, confirmed stays confirmed)
+            } else if (isPayLater) {
+                targetStatus = 'pending_payment';
+            } else if (isWallet || paymentDetails) {
+                targetStatus = 'paid';
+            } else if (isSaveDraft) {
+                targetStatus = 'draft';
+            }
+
             const payload = {
                 pickupAddressId: formData.pickupAddressId,
                 pickupDetails,
@@ -400,16 +456,15 @@ function AddOrderModal({ onClose, onSuccess, setActiveRoute, user, editOrder, ad
                 },
                 items: formData.items,
                 paymentMode: isPayLater ? 'PayLater' : formData.paymentMode,
-                courierPartner: selectedRate?.tierName || selectedRate?.name || 'Express',
+                courierPartner: selectedRate?.tierName || selectedRate?.name || (editOrder?.courierPartner) || 'Express',
                 weight: totalWeight,
                 deadWeight: totalWeight,
-                // Status is critical - ensure it's one existing in backend or draft
-                status: isPayLater ? 'pending_payment' : (isWallet || paymentDetails ? 'paid' : 'draft'),
+                status: targetStatus,
                 shippingCost: shippingCost,
                 totalAmount: totalAmount,
-                paymentId: paymentDetails?.razorpay_payment_id || null,
-                paymentOrderId: paymentDetails?.razorpay_order_id || null,
-                paymentSignature: paymentDetails?.razorpay_signature || null
+                paymentId: paymentDetails?.razorpay_payment_id || editOrder?.payment_id || null,
+                paymentOrderId: paymentDetails?.razorpay_order_id || editOrder?.payment_order_id || null,
+                paymentSignature: paymentDetails?.razorpay_signature || editOrder?.payment_signature || null
             };
 
             let data;
@@ -423,6 +478,7 @@ function AddOrderModal({ onClose, onSuccess, setActiveRoute, user, editOrder, ad
 
             if (data.success || data._id || data.id) {
                 if (onSuccess) onSuccess();
+                if (refreshOrders) refreshOrders();
                 onClose();
             } else {
                 throw new Error(data.message || 'Server returned an error');
@@ -501,9 +557,24 @@ function AddOrderModal({ onClose, onSuccess, setActiveRoute, user, editOrder, ad
                 uploadImages().then(res => {
                     if (!res.success) return;
                     let urls = [...currentItem.images, ...res.urls];
+
+                    const updatedItem = {
+                        name: currentItem.name,
+                        quantity: currentItem.quantity,
+                        weight: currentItem.weight,
+                        value: currentItem.value,
+                        length: currentItem.length,
+                        breadth: currentItem.breadth,
+                        height: currentItem.height,
+                        hsCode: currentItem.hsCode,
+                        productType: currentItem.productType,
+                        category: currentItem.category,
+                        images: urls
+                    };
+
                     setFormData(p => {
                         const newItems = [...p.items];
-                        newItems[currentItem.editIndex] = { ...currentItem, images: urls };
+                        newItems[currentItem.editIndex] = updatedItem;
                         return { ...p, items: newItems };
                     });
                     setCurrentItem({ name: '', quantity: 1, weight: '', value: '', length: '', breadth: '', height: '', hsCode: '', productType: '', category: 'General', images: [], imageFiles: [], imagePreviews: [], isEditing: false, editIndex: null });
@@ -525,6 +596,7 @@ function AddOrderModal({ onClose, onSuccess, setActiveRoute, user, editOrder, ad
             });
             // Do NOT remove item from list immediately when editing, update it later or clear if canceled
         },
+        canEdit,
         calculatingRate, rateCalculation, selectedRate, setSelectedRate, loading, loadingLater, processingPayment, handleSubmit, walletBalance,
         states, cities, pickupStates, pickupCities, pincodeLoading, handlePincodeLookup, setCurrentStep, handleSelectRate, onClose
     };
@@ -623,8 +695,8 @@ function AddOrderModal({ onClose, onSuccess, setActiveRoute, user, editOrder, ad
                                 {currentStep === 3 && <StepServiceSelection {...stepProps} />}
                                 {currentStep === 4 && <StepPaymentSummary {...stepProps} />}
 
-                                {/* Standard Navigation (Hidden on step 4 as it has its own matched buttons) */}
-                                {currentStep < 4 && (
+                                {/* Standard Navigation (Hidden on step 3 & 4 to focus on selections/payment) */}
+                                {currentStep < 3 && (
                                     <div className="flex items-center justify-between pt-12 border-t border-slate-200">
                                         {currentStep > 1 && (
                                             <button onClick={() => setCurrentStep(currentStep - 1)} className="px-10 py-5 bg-white border border-slate-100 text-slate-400 rounded-3xl text-[10px] font-semibold uppercase tracking-widest hover:bg-slate-900 hover:text-white transition-all shadow-sm flex items-center gap-4 group">
@@ -633,27 +705,41 @@ function AddOrderModal({ onClose, onSuccess, setActiveRoute, user, editOrder, ad
                                         )}
                                         <div className="flex-1" />
                                         <div className="flex items-center gap-4">
-                                            {/* Save Button — for quick save without payment flow */}
-                                            {editOrder && formData.items.length > 0 && (
+                                            {/* Save Button — for both new and existing orders if editable */}
+                                            {canEdit && formData.items.length > 0 && (
                                                 <button
                                                     onClick={() => {
-                                                        if (!selectedRate) {
-                                                            // Auto-set a default rate if not selected
-                                                            setSelectedRate({ tierName: editOrder.courierPartner || 'Express', estimatedCost: parseFloat(editOrder.shippingCost || 0), price: parseFloat(editOrder.shippingCost || 0) });
+                                                        const actionType = editOrder ? 'Update' : 'SaveAsDraft';
+                                                        setLoading(true);
+                                                        // Ensure we have some rate selected if it was missing
+                                                        if (!selectedRate && editOrder) {
+                                                            setSelectedRate({
+                                                                tierName: editOrder.courierPartner || 'Express',
+                                                                estimatedCost: parseFloat(editOrder.shippingCost || 0),
+                                                                price: parseFloat(editOrder.shippingCost || 0)
+                                                            });
                                                         }
-                                                        setTimeout(() => handleSubmit(null, 'PayLater'), 100);
+                                                        setTimeout(() => handleSubmit(null, actionType), 100);
                                                     }}
                                                     disabled={loading || loadingLater}
                                                     className="px-12 py-5 bg-emerald-600 text-white rounded-3xl text-[10px] font-semibold uppercase tracking-widest hover:bg-emerald-700 hover:shadow-2xl hover:shadow-emerald-900/30 transition-all flex items-center gap-3 group shadow-lg shadow-emerald-200 disabled:opacity-50"
                                                 >
-                                                    {loadingLater ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle className="w-5 h-5" />}
-                                                    Save Order
+                                                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Box className="w-5 h-5" />}
+                                                    {editOrder ? 'Update Order' : 'Save as Draft'}
                                                 </button>
                                             )}
-                                            <button onClick={() => currentStep < 4 ? setCurrentStep(currentStep + 1) : handleSubmit()} className="px-16 py-5 bg-red-600 text-white rounded-3xl text-[10px] font-semibold uppercase tracking-widest hover:bg-black hover:shadow-2xl hover:shadow-red-900/40 transition-all flex items-center gap-4 group">
-                                                Next Sequence
-                                                <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                                            </button>
+
+                                            {canEdit ? (
+                                                <button onClick={() => currentStep < 4 ? setCurrentStep(currentStep + 1) : handleSubmit()} className="px-16 py-5 bg-red-600 text-white rounded-3xl text-[10px] font-semibold uppercase tracking-widest hover:bg-black hover:shadow-2xl hover:shadow-red-900/40 transition-all flex items-center gap-4 group">
+                                                    Next Sequence
+                                                    <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                                </button>
+                                            ) : (
+                                                <div className="px-8 py-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-center gap-3">
+                                                    <ShieldAlert className="w-5 h-5 text-amber-600" />
+                                                    <span className="text-[9px] font-black text-amber-800 uppercase tracking-widest">Read-Only: Order Verified</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 )}

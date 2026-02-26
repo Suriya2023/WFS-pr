@@ -3,8 +3,8 @@
 require_once '../../config.php';
 
 $input = json_decode(file_get_contents("php://input"), true);
-$manifestId = $input['manifest_id'] ?? null;
-$pickupDate = $input['pickup_date'] ?? date('Y-m-d');
+$manifestId = isset($input['manifest_id']) ? $input['manifest_id'] : null;
+$pickupDate = isset($input['pickup_date']) ? $input['pickup_date'] : date('Y-m-d');
 
 if (!$manifestId) {
     sendResponse(["message" => "Manifest ID is required"], 400);

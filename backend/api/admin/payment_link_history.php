@@ -4,14 +4,14 @@ require_once '../../config.php';
 
 // Auth Check
 $headers = apache_request_headers();
-$token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
+$token = str_replace('Bearer ', '', isset($headers['Authorization']) ? $headers['Authorization'] : '');
 $tokenData = json_decode(base64_decode($token), true);
-$userId = $tokenData['id'] ?? null;
+$userId = isset($tokenData['id']) ? $tokenData['id'] : null;
 
 if (!$userId)
     sendResponse(["message" => "Unauthorized"], 401);
 
-$targetUserId = $_GET['user_id'] ?? null;
+$targetUserId = isset($_GET['user_id']) ? $_GET['user_id'] : null;
 if (!$targetUserId)
     sendResponse(["message" => "User ID required"], 400);
 

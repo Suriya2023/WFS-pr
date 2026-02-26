@@ -7,7 +7,7 @@ if (!$token) {
     sendResponse(["message" => "Unauthorized"], 401);
 }
 
-$id = $_GET['id'] ?? null;
+$id = isset($_GET['id']) ? $_GET['id'] : null;
 $method = $_SERVER['REQUEST_METHOD'];
 
 if (!$id) {
@@ -19,12 +19,12 @@ if ($method === 'PUT') {
     try {
         $stmt = $pdo->prepare("UPDATE user_addresses SET name=?, phone=?, address1=?, city=?, state=?, pincode=? WHERE id=?");
         $stmt->execute([
-            $input['name'] ?? '',
-            $input['phone'] ?? '',
-            $input['address1'] ?? '',
-            $input['city'] ?? '',
-            $input['state'] ?? '',
-            $input['pincode'] ?? '',
+            isset($input['name']) ? $input['name'] : '',
+            isset($input['phone']) ? $input['phone'] : '',
+            isset($input['address1']) ? $input['address1'] : '',
+            isset($input['city']) ? $input['city'] : '',
+            isset($input['state']) ? $input['state'] : '',
+            isset($input['pincode']) ? $input['pincode'] : '',
             $id
         ]);
         sendResponse(["message" => "Address updated successfully", "success" => true]);

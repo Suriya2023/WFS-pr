@@ -3,7 +3,7 @@
 require_once '../config.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
-$action = $_GET['action'] ?? '';
+$action = isset($_GET['action']) ? $_GET['action'] : '';
 $data = json_decode(file_get_contents("php://input"), true);
 
 $token = verifyToken();

@@ -42,8 +42,11 @@ function Orders({ user, setActiveRoute, setSelectedOrderId, activeTab, setActive
 
             // Transform data to match table format
             const transformedData = rawData.map(order => {
-                // Standard Padded ID for display if tracking ID is missing
-                const displayOrderId = order.tracking_id || `ORD-${String(order.id).padStart(6, '0')}`;
+                // Unified Order ID format: ORD-YYYYMMDD-IDHEX
+                const orderDate = order.created_at ? new Date(order.created_at) : new Date();
+                const dFormatted = orderDate.getFullYear() + String(orderDate.getMonth() + 1).padStart(2, '0') + String(orderDate.getDate()).padStart(2, '0');
+                const randomHex = (order.id * 1234567).toString(16).toUpperCase().substring(0, 4);
+                const displayOrderId = `ORD-${dFormatted}-${order.id}${randomHex}`;
 
                 return {
                     orderId: displayOrderId,
@@ -209,21 +212,27 @@ function Orders({ user, setActiveRoute, setSelectedOrderId, activeTab, setActive
             const token = localStorage.getItem('token');
             const config = { headers: { Authorization: `Bearer ${token}` } };
 
-            // First get the order to find the AWB
-            const { data: order } = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/orders.php?id=${orderId}`, config);
-            const awb = order.trackingId || order.orderId;
+            // 1. Fetch the full shipment details to get the tracking_id correctly
+            // Using update.php GET which we already verified works
+            const { data: order } = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/shipment/update.php?id=${orderId}`, config);
 
-            if (!awb) {
-                alert('No tracking ID found for this order');
+            // Priority: tracking_id (AWB) -> fallback to database numeric ID
+            const shipmentIdentifier = order.tracking_id || order.id || orderId;
+
+            if (!shipmentIdentifier) {
+                alert('Shipment identifier not found');
                 return;
             }
 
-            await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/shipment/${awb}/cancel`, { reason }, config);
+            // 2. Call the cancel API using a query parameter for compatibility with non-rewrite servers
+            await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/shipment/cancel.php?awb=${shipmentIdentifier}`, { reason }, config);
+
             alert('Shipment cancelled successfully');
-            fetchOrders();
+            fetchOrders(); // Refresh the list
         } catch (error) {
             console.error('Cancel shipment error:', error);
-            alert(error.response?.data?.message || 'Failed to cancel shipment');
+            const msg = error.response?.data?.message || 'Failed to cancel shipment. Endpoint might be missing.';
+            alert(msg);
         }
     };
 

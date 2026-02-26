@@ -2,101 +2,78 @@
 // backend/api/user/profile.php
 require_once __DIR__ . '/../../config.php';
 
-// Auth Check
-$authHeader = '';
-if (function_exists('apache_request_headers')) {
-    $headers = apache_request_headers();
-    $authHeader = $headers['Authorization'] ?? '';
-}
-if (!$authHeader) {
-    $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
-}
-
-if (!$authHeader || !preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
-    sendResponse(["message" => "Unauthorized access."], 401);
-}
-
-$tokenData = json_decode(base64_decode($matches[1]), true);
-$userId = $tokenData['id'] ?? null;
-
-if (!$userId) {
-    sendResponse(["message" => "Invalid token."], 401);
-}
-
 $method = $_SERVER['REQUEST_METHOD'];
 
+$token = verifyToken();
+if (!$token) {
+    sendResponse(array("message" => "Unauthorized access."), 401);
+}
+
 try {
+    $tokenData = json_decode(base64_decode($token), true);
+    $userId = isset($tokenData['id']) ? $tokenData['id'] : null;
+
+    if (!$userId) {
+        sendResponse(array("message" => "Invalid session token."), 401);
+    }
+
     if ($method == 'GET') {
-        // Fetch User Data
-        $stmt = $pdo->prepare("SELECT id, firstname, lastname, email, mobile, role, wallet_balance, kyc_status, profile_image, company_name, gst_number, pan_number, aadhaar_number, shipping_margin, billing_address, billing_city, billing_state, billing_pincode, billing_country FROM users WHERE id = ?");
-        $stmt->execute([$userId]);
+        $sql = "SELECT id, firstname, lastname, email, mobile, role, wallet_balance, kyc_status, profile_image, company_name, gst_number, pan_number, aadhaar_number, shipping_margin, billing_address, billing_city, billing_state, billing_pincode, billing_country FROM users WHERE id = ?";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute(array($userId));
         $user = $stmt->fetch();
 
         if (!$user) {
-            sendResponse(["message" => "User not found."], 404);
+            sendResponse(array("message" => "User account not found."), 404);
         }
 
-        // Rename profile_image to profileImage for frontend compatibility
-        $user['profileImage'] = $user['profile_image'];
-        $user['kycStatus'] = $user['kyc_status'];
+        $user['profileImage'] = isset($user['profile_image']) ? $user['profile_image'] : '';
+        $user['kycStatus'] = isset($user['kyc_status']) ? $user['kyc_status'] : 'not_submitted';
 
-        sendResponse($user);
+        header('Content-Type: application/json');
+        echo json_encode($user);
+        exit;
 
     } elseif ($method == 'PUT' || $method == 'POST') {
-        // Update User Data
         $input = json_decode(file_get_contents("php://input"), true);
+        if (!$input) {
+            sendResponse(array("message" => "No data provided."), 400);
+        }
 
-        $firstname = $input['firstname'] ?? '';
-        $lastname = $input['lastname'] ?? '';
-        $mobile = $input['mobile'] ?? '';
-        $company_name = $input['company_name'] ?? '';
-        $gst_number = $input['gst_number'] ?? '';
-        $pan_number = $input['pan_number'] ?? '';
-        $aadhaar_number = $input['aadhaar_number'] ?? '';
-        $shipping_margin = $input['shipping_margin'] ?? 0;
-        $billing_address = $input['billing_address'] ?? '';
-        $billing_city = $input['billing_city'] ?? '';
-        $billing_state = $input['billing_state'] ?? '';
-        $billing_pincode = $input['billing_pincode'] ?? '';
-        $billing_country = $input['billing_country'] ?? 'India';
+        $fields = array('firstname', 'lastname', 'mobile', 'company_name', 'gst_number', 'pan_number', 'aadhaar_number', 'billing_address', 'billing_city', 'billing_state', 'billing_pincode', 'billing_country');
 
-        $sql = "UPDATE users SET 
-                firstname = ?, 
-                lastname = ?, 
-                mobile = ?, 
-                company_name = ?, 
-                gst_number = ?, 
-                pan_number = ?, 
-                aadhaar_number = ?, 
-                shipping_margin = ?, 
-                billing_address = ?, 
-                billing_city = ?, 
-                billing_state = ?, 
-                billing_pincode = ?, 
-                billing_country = ?
-                WHERE id = ?";
+        $setParts = array();
+        $params = array();
+        foreach ($fields as $field) {
+            if (isset($input[$field])) {
+                $setParts[] = "`$field` = ?";
+                $params[] = $input[$field];
+            }
+        }
+
+        if (isset($input['shipping_margin'])) {
+            $setParts[] = "`shipping_margin` = ?";
+            $params[] = (float) $input['shipping_margin'];
+        }
+
+        if (empty($setParts)) {
+            sendResponse(array("message" => "No fields to update."), 400);
+        }
+
+        $sql = "UPDATE users SET " . implode(", ", $setParts) . " WHERE id = ?";
+        $params[] = $userId;
 
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([
-            $firstname,
-            $lastname,
-            $mobile,
-            $company_name,
-            $gst_number,
-            $pan_number,
-            $aadhaar_number,
-            $shipping_margin,
-            $billing_address,
-            $billing_city,
-            $billing_state,
-            $billing_pincode,
-            $billing_country,
-            $userId
-        ]);
+        $stmt->execute($params);
 
-        sendResponse(["message" => "Profile updated successfully.", "success" => true]);
+        sendResponse(true, "Profile updated successfully.");
     }
 
 } catch (PDOException $e) {
-    sendResponse(["message" => "Database error: " . $e->getMessage()], 500);
+    debugLog("Profile API PDO Error: " . $e->getMessage());
+    sendResponse(array("message" => "Database error: " . $e->getMessage()), 500);
+} catch (Exception $e) {
+    debugLog("Profile API Error: " . $e->getMessage());
+    sendResponse(array("message" => "Error: " . $e->getMessage()), 500);
 }
+?>

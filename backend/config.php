@@ -2,26 +2,13 @@
 // backend/config.php
 ob_start();
 
-// 1. CORS HEADERS - ROBUST FIX
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-
-// If development, you can allow specific or all origins
-if (!$origin || $origin == 'http://localhost:5173' || $origin == 'http://127.0.0.1:5173') {
-    $origin = 'http://localhost:5173'; // Default to Vite port
-}
-
-header("Access-Control-Allow-Origin: $origin");
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS, PATCH");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
-header("Access-Control-Allow-Credentials: true");
-
-// Handle preflight (OPTIONS) request immediately
-if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
-    http_response_code(200);
+// 1. CORS - handled by .htaccess (Apache sets headers before PHP runs)
+// Only early-exit OPTIONS so PHP doesn't process preflight requests
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-ini_set('display_errors', 0);
+ini_set('display_errors', 1);
 ini_set('log_errors', 1);
 ini_set('error_log', __DIR__ . '/php_error.log');
 error_reporting(E_ALL);
@@ -34,14 +21,19 @@ define('DB_PASS', '');
 
 // 3. DATABASE CONNECTION
 try {
-    $pdo = new PDO("mysql:host=" . DB_HOST . ";charset=utf8", DB_USER, DB_PASS);
+    // Step 1: Connect without DB to create it if needed
+    $pdo = new PDO("mysql:host=" . DB_HOST . ";charset=utf8mb4", DB_USER, DB_PASS);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $pdo->exec("CREATE DATABASE IF NOT EXISTS " . DB_NAME);
-    $pdo->exec("USE " . DB_NAME);
+    $pdo->exec("CREATE DATABASE IF NOT EXISTS `" . DB_NAME . "` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+    // Step 2: Reconnect with the database selected
+    $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4", DB_USER, DB_PASS);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     if (ob_get_length())
         ob_clean();
-    die(json_encode(["success" => false, "message" => "DB Connection Failed: " . $e->getMessage()]));
+    http_response_code(500);
+    die(json_encode(array("success" => false, "message" => "DB Connection Failed: " . $e->getMessage())));
 }
 
 // 4. HELPER FUNCTIONS
@@ -78,10 +70,10 @@ function sendResponse($success, $message = '', $data = null)
 
 function verifyToken()
 {
-    $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
+    $authHeader = isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION']) ? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] : '');
     if (!$authHeader && function_exists('apache_request_headers')) {
         $headers = apache_request_headers();
-        $authHeader = $headers['Authorization'] ?? '';
+        $authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : '';
     }
     if (preg_match('/Bearer\s(\S+)/', $authHeader, $matches))
         return $matches[1];

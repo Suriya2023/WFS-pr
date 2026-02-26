@@ -2,49 +2,69 @@
 // backend/api/shipment/update.php
 require_once '../../config.php';
 
+// Safe error reporting
+ini_set('display_errors', 0);
+
 $token = verifyToken();
 if (!$token) {
-    sendResponse(["message" => "Unauthorized"], 401);
+    sendResponse(array("message" => "Unauthorized"), 401);
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $id = $_GET['id'] ?? null;
+    $id = isset($_GET['id']) ? $_GET['id'] : null;
     if (!$id) {
-        sendResponse(["message" => "ID required"], 400);
+        sendResponse(array("message" => "ID required"), 400);
     }
-    $stmt = $pdo->prepare("SELECT * FROM shipments WHERE id = ?");
-    $stmt->execute([$id]);
-    $shipment = $stmt->fetch();
-    if (!$shipment) {
-        sendResponse(["message" => "Shipment not found"], 404);
+    try {
+        $stmt = $pdo->prepare("SELECT s.*, 
+                               COALESCE(s.pickup_name, a.name) as pickup_name,
+                               COALESCE(s.pickup_phone, a.phone) as pickup_phone,
+                               COALESCE(s.pickup_address, a.address1) as pickup_address,
+                               COALESCE(s.pickup_city, a.city) as pickup_city,
+                               COALESCE(s.pickup_state, a.state) as pickup_state,
+                               COALESCE(s.pickup_pincode, a.pincode) as pickup_pincode
+                               FROM shipments s 
+                               LEFT JOIN user_addresses a ON s.pickup_address_id = a.id
+                               WHERE s.id = ?");
+        $stmt->execute(array($id));
+        $shipment = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$shipment) {
+            sendResponse(array("message" => "Shipment not found"), 404);
+        }
+        sendResponse($shipment);
+    } catch (PDOException $e) {
+        sendResponse(array("message" => "Database error: " . $e->getMessage()), 500);
     }
-    sendResponse($shipment);
+    exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'PUT' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
-    sendResponse(["message" => "Method not allowed"], 405);
+    sendResponse(array("message" => "Method not allowed"), 405);
 }
 
-$id = $_GET['id'] ?? null;
-$input = json_decode(file_get_contents("php://input"), true);
+$id = isset($_GET['id']) ? $_GET['id'] : null;
+$rawInput = file_get_contents("php://input");
+$input = json_decode($rawInput, true);
 
 if (!$id) {
-    sendResponse(["message" => "ID required"], 400);
+    sendResponse(array("message" => "ID required"), 400);
 }
 
 try {
     // Consignee details
-    $consignee = $input['consignee'] ?? [];
-    $name = trim(($consignee['firstName'] ?? '') . ' ' . ($consignee['lastName'] ?? ''));
-    $phone = $consignee['mobile'] ?? '';
-    $address = $consignee['address1'] ?? '';
-    $country = $consignee['country'] ?? '';
+    $consignee = isset($input['consignee']) ? $input['consignee'] : array();
+    $firstName = isset($consignee['firstName']) ? $consignee['firstName'] : '';
+    $lastName = isset($consignee['lastName']) ? $consignee['lastName'] : '';
+    $name = trim($firstName . ' ' . $lastName);
+    $phone = isset($consignee['mobile']) ? $consignee['mobile'] : '';
+    $address = isset($consignee['address1']) ? $consignee['address1'] : '';
+    $country = isset($consignee['country']) ? $consignee['country'] : '';
 
-    $deadWeight = $input['deadWeight'] ?? 0;
-    $items = json_encode($input['items'] ?? []);
-    $status = $input['status'] ?? 'draft';
+    $deadWeight = isset($input['deadWeight']) ? $input['deadWeight'] : 0;
+    $items = json_encode(isset($input['items']) ? $input['items'] : array());
+    $status = isset($input['status']) ? $input['status'] : 'draft';
 
-    $pickup_id = $input['pickupAddressId'] ?? null;
+    $pickup_id = isset($input['pickupAddressId']) ? $input['pickupAddressId'] : null;
     if ($pickup_id === '')
         $pickup_id = null;
 
@@ -80,18 +100,20 @@ try {
             courierPartner = ?
             WHERE id = ?";
 
-    $pickupDetails = $input['pickupDetails'] ?? [];
+    $pickupDetails = isset($input['pickupDetails']) ? $input['pickupDetails'] : array();
 
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([
+    $shippingCost = isset($input['shippingCost']) ? floatval($input['shippingCost']) : 0;
+    $totalAmount = isset($input['totalAmount']) ? floatval($input['totalAmount']) : (isset($input['total_amount']) ? floatval($input['total_amount']) : ($shippingCost * 1.18));
+
+    $params = array(
         $pickup_id,
         $name,
         $phone,
         $address,
-        $consignee['city'] ?? '',
-        $consignee['state'] ?? '',
-        $consignee['pincode'] ?? '',
-        $consignee['email'] ?? '',
+        isset($consignee['city']) ? $consignee['city'] : '',
+        isset($consignee['state']) ? $consignee['state'] : '',
+        isset($consignee['pincode']) ? $consignee['pincode'] : '',
+        isset($consignee['email']) ? $consignee['email'] : '',
         $country,
         $deadWeight,
         $items,
@@ -99,25 +121,28 @@ try {
         $name,
         $phone,
         $address,
-        $pickupDetails['name'] ?? '',
-        $pickupDetails['phone'] ?? '',
-        $pickupDetails['address'] ?? '',
-        $pickupDetails['city'] ?? '',
-        $pickupDetails['state'] ?? '',
-        $pickupDetails['pincode'] ?? '',
-        $input['paymentMode'] ?? 'Prepaid',
-        $input['weight'] ?? $deadWeight,
-        $input['shippingCost'] ?? 0,
-        $input['totalAmount'] ?? $input['total_amount'] ?? (($input['shippingCost'] ?? 0) * 1.18),
-        $input['paymentId'] ?? null,
-        $input['paymentOrderId'] ?? null,
-        $input['paymentSignature'] ?? null,
-        $input['courierPartner'] ?? null,
+        isset($pickupDetails['name']) ? $pickupDetails['name'] : '',
+        isset($pickupDetails['phone']) ? $pickupDetails['phone'] : '',
+        isset($pickupDetails['address']) ? $pickupDetails['address'] : '',
+        isset($pickupDetails['city']) ? $pickupDetails['city'] : '',
+        isset($pickupDetails['state']) ? $pickupDetails['state'] : '',
+        isset($pickupDetails['pincode']) ? $pickupDetails['pincode'] : '',
+        isset($input['paymentMode']) ? $input['paymentMode'] : 'Prepaid',
+        isset($input['weight']) ? $input['weight'] : $deadWeight,
+        $shippingCost,
+        $totalAmount,
+        isset($input['paymentId']) ? $input['paymentId'] : null,
+        isset($input['paymentOrderId']) ? $input['paymentOrderId'] : null,
+        isset($input['paymentSignature']) ? $input['paymentSignature'] : null,
+        isset($input['courierPartner']) ? $input['courierPartner'] : null,
         $id
-    ]);
+    );
 
-    sendResponse(["message" => "Shipment updated successfully", "success" => true]);
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+
+    sendResponse(array("message" => "Shipment updated successfully", "success" => true));
 } catch (PDOException $e) {
-    sendResponse(["message" => "Error: " . $e->getMessage()], 500);
+    sendResponse(array("message" => "Error: " . $e->getMessage()), 500);
 }
 ?>

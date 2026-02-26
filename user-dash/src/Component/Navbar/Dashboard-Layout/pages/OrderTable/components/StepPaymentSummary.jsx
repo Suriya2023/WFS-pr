@@ -11,6 +11,7 @@ const StepPaymentSummary = ({
     handleSubmit,
     setCurrentStep,
     onClose,
+    canEdit,
 }) => {
     // Calculate totals based on the image logic (18% split into CGST/SGST)
     const shippingCost = selectedRate ? (selectedRate.estimatedCost || selectedRate.price || 0) : 0;
@@ -19,6 +20,7 @@ const StepPaymentSummary = ({
     const totalAmount = shippingCost + cgst + sgst;
 
     const setPaymentMode = (mode) => {
+        if (!canEdit) return;
         setFormData(prev => ({ ...prev, paymentMode: mode }));
     };
 
@@ -30,8 +32,14 @@ const StepPaymentSummary = ({
                     <CheckCircle2 className="w-8 h-8" />
                 </div>
                 <div className="space-y-1">
-                    <h3 className="text-xl font-bold text-slate-900 tracking-tight">Complete Payment</h3>
-                    <p className="text-sm font-medium text-slate-400">Order created successfully! Please complete the payment to proceed.</p>
+                    <h3 className="text-xl font-bold text-slate-900 tracking-tight">
+                        {canEdit ? 'Complete Payment' : 'Verification Locked'}
+                    </h3>
+                    <p className="text-sm font-medium text-slate-400">
+                        {canEdit
+                            ? 'Order created successfully! Please complete the payment to proceed.'
+                            : 'This order has been verified by the administration and can no longer be modified.'}
+                    </p>
                 </div>
             </div>
 
@@ -63,7 +71,8 @@ const StepPaymentSummary = ({
                 <div className="grid grid-cols-2 gap-6">
                     <button
                         onClick={() => setPaymentMode('Prepaid')}
-                        className={`group relative p-8 rounded-3xl border-2 transition-all flex flex-col items-center justify-center gap-3 ${formData.paymentMode === 'Prepaid' ? 'border-blue-600 bg-blue-50/20' : 'border-slate-100 bg-white hover:border-slate-200'}`}
+                        disabled={!canEdit}
+                        className={`group relative p-8 rounded-3xl border-2 transition-all flex flex-col items-center justify-center gap-3 ${formData.paymentMode === 'Prepaid' ? 'border-blue-600 bg-blue-50/20' : 'border-slate-100 bg-white hover:border-slate-200'} ${!canEdit && 'opacity-50 cursor-not-allowed'}`}
                     >
                         <span className="text-lg font-bold text-slate-900">Pay Now</span>
                         <div className="px-3 py-1 bg-green-50 text-green-600 text-[8px] font-bold uppercase rounded-lg border border-green-100">Fast & Secure</div>
@@ -71,7 +80,8 @@ const StepPaymentSummary = ({
                     </button>
                     <button
                         onClick={() => setPaymentMode('Wallet')}
-                        className={`group relative p-8 rounded-3xl border-2 transition-all flex flex-col items-center justify-center gap-3 ${formData.paymentMode === 'Wallet' ? 'border-blue-600 bg-blue-50/20' : 'border-slate-100 bg-white hover:border-slate-200'}`}
+                        disabled={!canEdit}
+                        className={`group relative p-8 rounded-3xl border-2 transition-all flex flex-col items-center justify-center gap-3 ${formData.paymentMode === 'Wallet' ? 'border-blue-600 bg-blue-50/20' : 'border-slate-100 bg-white hover:border-slate-200'} ${!canEdit && 'opacity-50 cursor-not-allowed'}`}
                     >
                         <span className="text-lg font-bold text-slate-900">Pay Wallet</span>
                         <div className="px-3 py-1 bg-green-50 text-green-600 text-[8px] font-bold uppercase rounded-lg border border-green-100">Fast & Secure</div>
@@ -88,33 +98,45 @@ const StepPaymentSummary = ({
                 >
                     Back
                 </button>
-                <button
-                    onClick={() => handleSubmit(null, 'PayLater')}
-                    disabled={loading || loadingLater || processingPayment}
-                    className={`flex-1 py-5 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all shadow-sm ${loadingLater
-                        ? 'bg-amber-100 text-amber-500 cursor-wait'
-                        : (loading || processingPayment ? 'bg-slate-50 text-slate-300 cursor-not-allowed' : 'bg-amber-50 border-2 border-amber-200 text-amber-700 hover:bg-amber-100 active:scale-95')
-                        }`}
-                >
-                    {loadingLater ? <Loader2 className="w-5 h-5 animate-spin mx-auto text-amber-600" /> : '⏳ Pay Later'}
-                </button>
-                <button
-                    onClick={() => handleSubmit()}
-                    disabled={loading || loadingLater || processingPayment || !formData.paymentMode}
-                    className={`flex-[1.5] py-5 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl transition-all flex items-center justify-center gap-3 ${(loading || processingPayment)
-                        ? 'bg-blue-400 text-white/70 cursor-wait'
-                        : (loadingLater || !formData.paymentMode ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700 active:scale-95 shadow-blue-500/30')
-                        }`}
-                >
-                    {loading || processingPayment ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                        <>
-                            <CardIcon className="w-5 h-5" />
-                            {formData.paymentMode === 'Wallet' ? 'Pay via Wallet' : 'Pay Now'}
-                        </>
-                    )}
-                </button>
+                {canEdit && (
+                    <>
+                        <button
+                            onClick={() => handleSubmit(null, 'PayLater')}
+                            disabled={loading || loadingLater || processingPayment}
+                            className={`flex-1 py-5 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all shadow-sm ${loadingLater
+                                ? 'bg-amber-100 text-amber-500 cursor-wait'
+                                : (loading || processingPayment ? 'bg-slate-50 text-slate-300 cursor-not-allowed' : 'bg-amber-50 border-2 border-amber-200 text-amber-700 hover:bg-amber-100 active:scale-95')
+                                }`}
+                        >
+                            {loadingLater ? <Loader2 className="w-5 h-5 animate-spin mx-auto text-amber-600" /> : '⏳ Pay Later'}
+                        </button>
+                        <button
+                            onClick={() => handleSubmit()}
+                            disabled={loading || loadingLater || processingPayment || !formData.paymentMode}
+                            className={`flex-[1.5] py-5 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl transition-all flex items-center justify-center gap-3 ${(loading || processingPayment)
+                                ? 'bg-blue-400 text-white/70 cursor-wait'
+                                : (loadingLater || !formData.paymentMode ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700 active:scale-95 shadow-blue-500/30')
+                                }`}
+                        >
+                            {loading || processingPayment ? (
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                            ) : (
+                                <>
+                                    <CardIcon className="w-5 h-5" />
+                                    {formData.paymentMode === 'Wallet' ? 'Pay via Wallet' : 'Pay Now'}
+                                </>
+                            )}
+                        </button>
+                    </>
+                )}
+                {!canEdit && (
+                    <button
+                        onClick={onClose}
+                        className="flex-[1.5] py-5 rounded-2xl font-bold text-xs uppercase tracking-widest bg-slate-900 text-white hover:bg-black transition-all shadow-xl"
+                    >
+                        Dismiss Viewer
+                    </button>
+                )}
             </div>
         </div>
     );

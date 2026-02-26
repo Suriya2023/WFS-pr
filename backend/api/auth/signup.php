@@ -15,9 +15,9 @@ if (!$input || empty($input['email']) || empty($input['password']) || empty($inp
 }
 
 $firstname = trim($input['firstname']);
-$lastname  = trim($input['lastname'] ?? '');
+$lastname  = trim(isset($input['lastname']) ? $input['lastname'] : '');
 $email     = trim($input['email']);
-$mobile    = trim($input['mobile'] ?? '');
+$mobile    = trim(isset($input['mobile']) ? $input['mobile'] : '');
 $password  = password_hash($input['password'], PASSWORD_BCRYPT);
 
 // Note: confirmPassword is handled by frontend validation, not needed in backend

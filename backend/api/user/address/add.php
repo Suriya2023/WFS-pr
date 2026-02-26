@@ -39,13 +39,13 @@ try {
 
     $stmt->execute([
         $userId,
-        $input['name'] ?? '',
-        $input['phone'] ?? '',
-        $input['address1'] ?? '',
-        $input['city'] ?? '',
-        $input['state'] ?? '',
-        $input['pincode'] ?? '',
-        $input['country'] ?? 'India',
+        isset($input['name']) ? $input['name'] : '',
+        isset($input['phone']) ? $input['phone'] : '',
+        isset($input['address1']) ? $input['address1'] : '',
+        isset($input['city']) ? $input['city'] : '',
+        isset($input['state']) ? $input['state'] : '',
+        isset($input['pincode']) ? $input['pincode'] : '',
+        isset($input['country']) ? $input['country'] : 'India',
         isset($input['isDefault']) ? (int) $input['isDefault'] : 0
     ]);
 

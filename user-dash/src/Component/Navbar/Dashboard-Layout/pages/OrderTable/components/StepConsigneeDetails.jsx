@@ -12,9 +12,10 @@ const StepConsigneeDetails = ({
     states = [],
     pickupStates = [],
     pincodeLoading = false,
+    canEdit = true,
 }) => {
     return (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-700">
+        <div className={`space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-700 ${!canEdit ? 'pointer-events-none opacity-80' : ''}`}>
 
             {/* Header section (Subtle) */}
             <div className="flex items-center gap-4">

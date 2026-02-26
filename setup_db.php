@@ -1,8 +1,8 @@
 <?php
 // ============================================================
 // BGL Express — COMPLETE Database Setup Script
-// Run once: D:\xampp\php\php.exe d:\xampp\htdocs\BGL-EXP\setup_db.php
-// OR visit: http://localhost:8081/BGL-EXP/setup_db.php
+// Run once: D:\WFS\php\php.exe d:\WFS\htdocs\WFS-pr\setup_db.php
+// OR visit: http://localhost/WFS-pr/setup_db.php
 // ============================================================
 
 // Direct DB connection (skip config.php to avoid header issues when running from CLI)
@@ -27,7 +27,7 @@ echo "=== BGL EXPRESS — FULL DATABASE SETUP ===\n\n";
 // ============================================================
 $fresh = false;
 if (php_sapi_name() === 'cli') {
-    $fresh = in_array('--fresh', $argv ?? []);
+    $fresh = in_array('--fresh', isset($argv) ? $argv : []);
 } else {
     $fresh = isset($_GET['fresh']) && $_GET['fresh'] == '1';
 }
@@ -148,7 +148,7 @@ try {
         `weight` DECIMAL(10, 2) DEFAULT 0,
         `deadWeight` DECIMAL(10, 2) DEFAULT 0,
         `dimensions` VARCHAR(50) DEFAULT '',
-        `items` JSON DEFAULT NULL,
+        `items` TEXT DEFAULT NULL,
         `destination_country` VARCHAR(100) DEFAULT 'India',
         `order_type` VARCHAR(50) DEFAULT 'Standard',
 

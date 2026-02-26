@@ -1,37 +1,36 @@
 <?php
 // backend/api/notifications.php
-require_once '../config.php';
+require_once __DIR__ . '/../config.php';
 
 $token = verifyToken();
 if (!$token) {
-    sendResponse(["message" => "Unauthorized"], 401);
+    sendResponse(array("message" => "Unauthorized"), 401);
 }
 
 $tokenData = json_decode(base64_decode($token), true);
-$userId = $tokenData['id'] ?? null;
+$userId = isset($tokenData['id']) ? $tokenData['id'] : null;
 
 $method = $_SERVER['REQUEST_METHOD'];
 
 try {
     if ($method === 'GET') {
-        $stmt = $pdo->prepare("SELECT id as _id, title, message, type, isRead, createdAt FROM notifications WHERE user_id = ? ORDER BY createdAt DESC LIMIT 20");
-        $stmt->execute([$userId]);
+        // Match exact DB schema: id, user_id, title, message, is_read, created_at
+        $stmt = $pdo->prepare("SELECT id as _id, title, message, is_read as isRead, created_at as createdAt FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 20");
+        $stmt->execute(array($userId));
         $notifications = $stmt->fetchAll();
         sendResponse($notifications);
-    } elseif ($method === 'PUT') {
-        // Mark as read (e.g., api/notifications.php?id=1)
-        // Note: Frontend uses /api/notifications/${id}/read
-        // Since we use .htaccess for extensionless, we need to handle the ID
 
+    } elseif ($method === 'PUT') {
         $uri = $_SERVER['REQUEST_URI'];
         if (preg_match('/notifications\/(\d+)\/read/', $uri, $matches)) {
             $notifId = $matches[1];
-            $stmt = $pdo->prepare("UPDATE notifications SET isRead = 1 WHERE id = ? AND user_id = ?");
-            $stmt->execute([$notifId, $userId]);
-            sendResponse(["message" => "Notification marked as read"]);
+            $stmt = $pdo->prepare("UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?");
+            $stmt->execute(array($notifId, $userId));
+            sendResponse(array("message" => "Notification marked as read"));
         }
     }
 } catch (PDOException $e) {
-    sendResponse(["message" => "Database error: " . $e->getMessage()], 500);
+    debugLog("Notifications API Error: " . $e->getMessage());
+    sendResponse(array("message" => "Database error: " . $e->getMessage()), 500);
 }
 ?>

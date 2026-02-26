@@ -126,9 +126,9 @@ function FinalDashConntrole() {
         const userRole = localStorage.getItem('role');
 
         // If admin, show admin dashboard or restricted pages
-        if (userRole === 'admin' && (activeRoute === 'dashboard' || activeRoute === 'orders' || activeRoute === 'customers' || activeRoute === 'kyc')) {
+        if (userRole === 'admin' && (activeRoute === 'dashboard' || activeRoute === 'orders' || activeRoute === 'customers' || activeRoute === 'kyc' || activeRoute === 'manifests' || activeRoute === 'pickups')) {
             const adminTab = activeRoute === 'customers' ? 'users' : activeRoute;
-            return <AdminDashboard setActiveRoute={setActiveRoute} setSelectedOrderId={setSelectedOrderId} activeTab={adminTab} />;
+            return <AdminDashboard setActiveRoute={setActiveRoute} setSelectedOrderId={setSelectedOrderId} activeTab={adminTab} user={user} />;
         }
 
         switch (activeRoute) {
@@ -148,7 +148,7 @@ function FinalDashConntrole() {
                 return <PickupsPage setActiveRoute={setActiveRoute} />;
             case 'customers':
             case 'address-book':
-                return userRole === 'admin' ? <AdminDashboard setActiveRoute={setActiveRoute} /> : <AddressBook />;
+                return userRole === 'admin' ? <AdminDashboard setActiveRoute={setActiveRoute} user={user} /> : <AddressBook />;
             case 'wallet':
                 return <WalletPage showRechargeModal={showRechargeModal} setShowRechargeModal={setShowRechargeModal} refreshGlobalUserData={refreshUserData} />;
             case 'bulk-report':
@@ -190,7 +190,7 @@ function FinalDashConntrole() {
             default:
                 if (userRole === 'admin') {
                     const adminTab = activeRoute === 'customers' ? 'users' : activeRoute;
-                    return <AdminDashboard setActiveRoute={setActiveRoute} activeTab={adminTab} />;
+                    return <AdminDashboard setActiveRoute={setActiveRoute} activeTab={adminTab} user={user} />;
                 }
                 return <DashboardPage setActiveRoute={setActiveRoute} stats={dashboardStats} />;
         }

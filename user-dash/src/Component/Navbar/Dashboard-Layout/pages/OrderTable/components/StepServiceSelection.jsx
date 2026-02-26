@@ -8,6 +8,7 @@ const StepServiceSelection = ({
     rateCalculation,
     formData,
     loading,
+    canEdit = true,
 }) => {
     const mockRates = [
         { id: "standard", name: "BGL Surface Link", price: 150, estimatedCost: 150, time: "5-7 Days", courier: "BGL Logistics Network", tierName: "Surface Link" },
@@ -20,7 +21,7 @@ const StepServiceSelection = ({
             : mockRates;
 
     return (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-700">
+        <div className={`space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-700 ${!canEdit ? 'pointer-events-none opacity-80' : ''}`}>
             {/* Header */}
             <div className="flex items-center gap-4">
                 <div className="w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center font-semibold text-sm">
@@ -49,8 +50,8 @@ const StepServiceSelection = ({
                                 key={rate.id || rate.tierName}
                                 onClick={() => handleSelectRate(rate)}
                                 className={`group relative bg-white border-2 rounded-[32px] p-8 cursor-pointer transition-all duration-500 overflow-hidden ${isSelected
-                                        ? "border-blue-600 shadow-xl shadow-blue-500/10 ring-4 ring-blue-500/5"
-                                        : "border-slate-50 hover:border-blue-200 hover:shadow-lg shadow-sm"
+                                    ? "border-blue-600 shadow-xl shadow-blue-500/10 ring-4 ring-blue-500/5"
+                                    : "border-slate-50 hover:border-blue-200 hover:shadow-lg shadow-sm"
                                     }`}
                             >
                                 {isSelected && (

@@ -13,7 +13,7 @@ if (!$token) {
 
 // Decode token
 $tokenData = json_decode(base64_decode($token), true);
-$role = $tokenData['role'] ?? 'user';
+$role = isset($tokenData['role']) ? $tokenData['role'] : 'user';
 
 if ($role !== 'admin') {
     sendResponse(false, "Access Denied");
@@ -21,20 +21,23 @@ if ($role !== 'admin') {
 
 if ($method == 'GET') {
     // Admin sees ALL shipments
-    $stmt = $pdo->query("SELECT shipments.*, users.name as user_name FROM shipments JOIN users ON shipments.user_id = users.id ORDER BY shipments.created_at DESC");
+    $stmt = $pdo->query("SELECT s.*, CONCAT(u.firstname, ' ', IFNULL(u.lastname, '')) as user_name 
+                         FROM shipments s 
+                         JOIN users u ON s.user_id = u.id 
+                         ORDER BY s.created_at DESC");
     $shipments = $stmt->fetchAll();
-    
+
     foreach ($shipments as &$s) {
         $s['items'] = json_decode($s['items'], true);
     }
-    
+
     sendResponse(true, "All Shipments", $shipments);
 
 } elseif ($method == 'PUT') {
     // Admin Updates Status
-    $shipmentId = $data['id'] ?? null;
-    $status = $data['status'] ?? null;
-    
+    $shipmentId = isset($data['id']) ? $data['id'] : null;
+    $status = isset($data['status']) ? $data['status'] : null;
+
     if (!$shipmentId || !$status) {
         sendResponse(false, "ID and Status required");
     }

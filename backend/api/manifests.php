@@ -8,10 +8,10 @@ if (!$token) {
 }
 
 $tokenData = json_decode(base64_decode($token), true);
-$userId = $tokenData['id'] ?? null;
+$userId = isset($tokenData['id']) ? $tokenData['id'] : null;
 
 $method = $_SERVER['REQUEST_METHOD'];
-$id = $_GET['id'] ?? null;
+$id = isset($_GET['id']) ? $_GET['id'] : null;
 
 try {
     if ($method === 'GET') {

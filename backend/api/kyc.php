@@ -3,7 +3,7 @@
 require_once '../config.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
-$action = $_GET['action'] ?? '';
+$action = isset($_GET['action']) ? $_GET['action'] : '';
 $data = json_decode(file_get_contents("php://input"), true);
 
 $token = verifyToken();
@@ -37,14 +37,14 @@ if ($method == 'GET' && $action == 'details') {
     }
 } elseif ($method == 'POST' && $action == 'submit') {
     // Handle KYC Submission from FormData
-    $fullName = $_POST['fullName'] ?? '';
-    $alternateContact = $_POST['alternateContact'] ?? '';
-    $aadhaarNumber = $_POST['aadhaarNumber'] ?? '';
-    $panNumber = $_POST['panNumber'] ?? '';
-    $accountType = $_POST['accountType'] ?? 'personal';
-    $address = $_POST['address'] ?? ''; // JSON string
-    $billing = $_POST['billing'] ?? ''; // JSON string
-    $businessData = $_POST['businessData'] ?? ''; // JSON string
+    $fullName = isset($_POST['fullName']) ? $_POST['fullName'] : '';
+    $alternateContact = isset($_POST['alternateContact']) ? $_POST['alternateContact'] : '';
+    $aadhaarNumber = isset($_POST['aadhaarNumber']) ? $_POST['aadhaarNumber'] : '';
+    $panNumber = isset($_POST['panNumber']) ? $_POST['panNumber'] : '';
+    $accountType = isset($_POST['accountType']) ? $_POST['accountType'] : 'personal';
+    $address = isset($_POST['address']) ? $_POST['address'] : ''; // JSON string
+    $billing = isset($_POST['billing']) ? $_POST['billing'] : ''; // JSON string
+    $businessData = isset($_POST['businessData']) ? $_POST['businessData'] : ''; // JSON string
 
     // Check if exists
     $stmt = $pdo->prepare("SELECT id FROM kyc_details WHERE user_id = ?");

@@ -5,9 +5,9 @@ require_once '../../utils/mailer.php';
 
 // Auth Check
 $headers = apache_request_headers();
-$token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
+$token = str_replace('Bearer ', '', isset($headers['Authorization']) ? $headers['Authorization'] : '');
 $tokenData = json_decode(base64_decode($token), true);
-$adminId = $tokenData['id'] ?? null;
+$adminId = isset($tokenData['id']) ? $tokenData['id'] : null;
 
 if (!$adminId)
     sendResponse(["message" => "Unauthorized"], 401);
@@ -19,9 +19,9 @@ if (!$admin || $admin['role'] !== 'admin')
     sendResponse(["message" => "Forbidden"], 403);
 
 $input = json_decode(file_get_contents("php://input"), true);
-$targetUserId = $input['user_id'] ?? null;
-$amount = floatval($input['amount'] ?? 0);
-$description = $input['description'] ?? 'Custom Payment Link';
+$targetUserId = isset($input['user_id']) ? $input['user_id'] : null;
+$amount = floatval(isset($input['amount']) ? $input['amount'] : 0);
+$description = isset($input['description']) ? $input['description'] : 'Custom Payment Link';
 
 if (!$targetUserId || $amount <= 0)
     sendResponse(["message" => "Invalid target user or amount"], 400);

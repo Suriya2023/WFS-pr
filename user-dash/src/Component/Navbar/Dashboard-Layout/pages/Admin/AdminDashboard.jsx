@@ -10,7 +10,7 @@ import AdminKycPage from './AdminKycPage';
 import AddOrderModal from '../OrderTable/AddOrderModal';
 import CustomerDetailsModal from './CustomerDetailsModal';
 
-function AdminDashboard({ activeTab: parentActiveTab, setActiveRoute, setSelectedOrderId }) {
+function AdminDashboard({ activeTab: parentActiveTab, setActiveRoute, setSelectedOrderId, user }) {
     const [stats, setStats] = useState({
         totalUsers: 0,
         totalShipments: 0,
@@ -21,6 +21,20 @@ function AdminDashboard({ activeTab: parentActiveTab, setActiveRoute, setSelecte
         csbOrders: 0,
         disputedOrders: 0
     });
+
+    // Image path resolver logic (Unified with ViewOrder)
+    const getItemImage = (img) => {
+        if (!img) return null;
+        if (img.startsWith('data:image')) return img;
+        if (img.startsWith('http')) return img;
+        let path = img.startsWith('/') ? img.substring(1) : img;
+        const baseUrl = import.meta.env.VITE_API_BASE_URL.replace(/\/api$/, '').replace(/\/+$/, '');
+        if (path.startsWith('backend/') && baseUrl.endsWith('/backend')) {
+            return `${baseUrl.substring(0, baseUrl.length - 8)}/${path}`;
+        }
+        return `${baseUrl}/${path}`;
+    };
+
     const [activeTab, setActiveTab] = useState(parentActiveTab || 'dashboard');
     const [loading, setLoading] = useState(true);
     const [users, setUsers] = useState([]);
@@ -59,6 +73,8 @@ function AdminDashboard({ activeTab: parentActiveTab, setActiveRoute, setSelecte
 
     useEffect(() => {
         if (parentActiveTab) setActiveTab(parentActiveTab);
+        if (parentActiveTab === 'manifests') setOrderSubTab('Manifested');
+        if (parentActiveTab === 'pickups') setOrderSubTab('Picked Up');
     }, [parentActiveTab]);
 
     useEffect(() => {
@@ -190,6 +206,43 @@ function AdminDashboard({ activeTab: parentActiveTab, setActiveRoute, setSelecte
         setActiveActionMenu(null);
     };
 
+    const handleEmitManifest = async (id) => {
+        if (!window.confirm('Emit Manifest and Generate Pickup Request Protocol?')) return;
+        try {
+            const token = localStorage.getItem('token');
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+
+            // 1. Create Manifest records and link shipment
+            const manifestRes = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/manifest/create.php`,
+                { shipment_ids: [id] },
+                config
+            );
+
+            const manifestId = manifestRes.data.manifest_id;
+
+            if (manifestId) {
+                // 2. Generate Pickup Request for this manifest
+                await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/pickup/request.php`,
+                    { manifest_id: manifestId },
+                    config
+                );
+
+                // 3. Log to history via update_status
+                await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/shipment/update_status.php`,
+                    { shipment_id: id, status: 'manifested', remark: 'Manifest generated and pickup scheduled automatically', location: 'BGL Hub' },
+                    config
+                );
+
+                alert('Manifest Emitted & Pickup Request Generated Successfully.');
+                fetchInitialData();
+            }
+        } catch (e) {
+            console.error('Manifest/Pickup Error:', e);
+            alert(e.response?.data?.message || 'Operation failed. Check manifest/pickup APIs.');
+        }
+        setActiveActionMenu(null);
+    };
+
     const handleVerifyOrder = async (id) => {
         if (!window.confirm('Execute Verify Protocol? A tracking ID will be generated.')) return;
         try {
@@ -206,10 +259,19 @@ function AdminDashboard({ activeTab: parentActiveTab, setActiveRoute, setSelecte
         setActiveActionMenu(null);
     };
 
-    const handleEditOrder = (order) => {
-        setEditingOrder(order);
-        setShowEditModal(true);
-        setActiveActionMenu(null);
+    const handleEditOrder = async (order) => {
+        try {
+            const token = localStorage.getItem('token');
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+            // Fetch complete details to ensure items and pickup info are present
+            const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/shipment/update.php?id=${order.id}`, config);
+            setEditingOrder({ ...data, id: order.id }); // Ensure ID is preserved
+            setShowEditModal(true);
+            setActiveActionMenu(null);
+        } catch (error) {
+            console.error('Failed to fetch full order details:', error);
+            alert('Could not load complete order data.');
+        }
     };
 
     const ActionMenu = ({ id, type, data }) => (
@@ -252,9 +314,9 @@ function AdminDashboard({ activeTab: parentActiveTab, setActiveRoute, setSelecte
                 </button>
             )}
             {type === 'order' && data.status === 'packed' && (
-                <button onClick={() => handleUpdateStatus(id, 'manifested', 'Manifest generated and attached')} className="w-full flex items-center gap-4 px-6 py-4 hover:bg-purple-50 text-slate-700 transition-all group">
+                <button onClick={() => handleEmitManifest(id)} className="w-full flex items-center gap-4 px-6 py-4 hover:bg-purple-50 text-slate-700 transition-all group">
                     <div className="p-2 bg-purple-50 rounded-xl text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-all"><FileText className="w-4 h-4" /></div>
-                    <span className="text-[13px] font-black">Manifest Intel</span>
+                    <span className="text-[13px] font-black">Emit Manifest</span>
                 </button>
             )}
             {type === 'order' && data.status === 'manifested' && (
@@ -341,9 +403,11 @@ function AdminDashboard({ activeTab: parentActiveTab, setActiveRoute, setSelecte
             const normalizedStatus = s.status?.toLowerCase().replace('_', ' ');
             const normalizedTab = orderSubTab.toLowerCase().replace('s', ''); // Handle Drafts -> Draft
 
+            if (orderSubTab === 'Manifested') return s.status === 'manifested';
+            if (orderSubTab === 'Picked Up') return s.status === 'picked_up';
+
             return normalizedStatus === orderSubTab.toLowerCase() ||
-                normalizedStatus === normalizedTab ||
-                (s.status === 'picked_up' && orderSubTab === 'Picked Up');
+                normalizedStatus === normalizedTab;
         });
 
         const tabs = [
@@ -352,6 +416,7 @@ function AdminDashboard({ activeTab: parentActiveTab, setActiveRoute, setSelecte
             { id: 'Ready', label: 'Ready' },
             { id: 'Packed', label: 'Packed' },
             { id: 'Manifested', label: 'Manifested' },
+            { id: 'Picked Up', label: 'Picked Up' },
             { id: 'Dispatched', label: 'Dispatched' },
             { id: 'Received', label: 'Received' },
             { id: 'RTO', label: 'RTO' },
@@ -400,7 +465,7 @@ function AdminDashboard({ activeTab: parentActiveTab, setActiveRoute, setSelecte
 
                     {/* Orders Table Container */}
                     <div className="bg-white rounded-[24px] border border-red-50/50 shadow-xl shadow-red-900/5 overflow-hidden">
-                        <div className="overflow-x-auto">
+                        <div className="overflow-x-auto scrollbar-hide">
                             <table className="w-full text-left">
                                 <thead>
                                     <tr className="bg-slate-50/30 border-b border-slate-100">
@@ -425,8 +490,10 @@ function AdminDashboard({ activeTab: parentActiveTab, setActiveRoute, setSelecte
                                 </thead>
                                 <tbody className="divide-y divide-slate-50">
                                     {filteredShipments.map(s => {
+                                        const orderDate = s.created_at ? new Date(s.created_at) : new Date();
+                                        const dFormatted = orderDate.getFullYear() + String(orderDate.getMonth() + 1).padStart(2, '0') + String(orderDate.getDate()).padStart(2, '0');
                                         const randomHex = (s.id * 1234567).toString(16).toUpperCase().substring(0, 4);
-                                        const displayOrderId = `ORD-20260225-${s.id}${randomHex}`;
+                                        const displayOrderId = `ORD-${dFormatted}-${s.id}${randomHex}`;
                                         const isDomestic = s.destination_country?.toLowerCase() === 'india' || !s.destination_country;
                                         const isSelected = selectedOrders.includes(s.id);
 
@@ -458,9 +525,28 @@ function AdminDashboard({ activeTab: parentActiveTab, setActiveRoute, setSelecte
                                                     <p className="text-[10px] text-slate-300 font-bold mt-1 uppercase">{new Date(s.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                                                 </td>
                                                 <td className="p-6">
-                                                    <p className="text-[11px] font-bold text-slate-900">{s.weight || 0.2} kg</p>
-                                                    <p className="text-[9px] text-slate-400 font-medium tracking-tighter">8x6x4 cm</p>
-                                                    <p className="text-[9px] text-slate-300 font-black uppercase tracking-widest mt-1">Items: 1</p>
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="flex -space-x-3 group-hover:space-x-1 transition-all duration-300">
+                                                            {(() => {
+                                                                let items = [];
+                                                                try { items = Array.isArray(s.items) ? s.items : JSON.parse(s.items || '[]'); } catch (e) { }
+                                                                const allImgs = items.reduce((acc, itm) => [...acc, ...(itm.images || [])], []);
+                                                                return allImgs.length > 0 ? (
+                                                                    allImgs.slice(0, 2).map((img, idx) => (
+                                                                        <div key={idx} className="w-8 h-8 rounded-lg bg-white border border-slate-200 overflow-hidden shadow-sm relative z-10 group-hover:z-20 transform hover:scale-125 transition-all">
+                                                                            <img src={getItemImage(img)} className="w-full h-full object-cover" onError={e => e.target.src = 'https://via.placeholder.com/50'} />
+                                                                        </div>
+                                                                    ))
+                                                                ) : (
+                                                                    <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-300 border border-dotted border-slate-200"><Package className="w-3.5 h-3.5" /></div>
+                                                                );
+                                                            })()}
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-[11px] font-bold text-slate-900">{s.weight || 0.2} kg</p>
+                                                            <p className="text-[10px] text-slate-400 font-medium tracking-tighter uppercase">{s.courierPartner || 'Express'}</p>
+                                                        </div>
+                                                    </div>
                                                 </td>
                                                 <td className="p-6">
                                                     <p className="text-[12px] font-black text-slate-900">₹{parseFloat(s.shippingCost || 0).toFixed(2)}</p>
@@ -494,7 +580,7 @@ function AdminDashboard({ activeTab: parentActiveTab, setActiveRoute, setSelecte
                                                             </button>
                                                         ) : s.status === 'packed' ? (
                                                             <button
-                                                                onClick={() => handleUpdateStatus(s.id, 'manifested', 'Manifest generated and shipment ready for dispatch')}
+                                                                onClick={() => handleEmitManifest(s.id)}
                                                                 className="w-full flex items-center justify-between px-3 py-2 bg-pink-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-lg shadow-pink-200"
                                                             >
                                                                 Emit Manifest <FileDigit className="w-3 h-3" />
@@ -595,7 +681,7 @@ function AdminDashboard({ activeTab: parentActiveTab, setActiveRoute, setSelecte
                     </button>
                 </div>
 
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-x-auto min-h-[600px]">
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-x-auto scrollbar-hide min-h-[600px]">
                     <table className="w-full text-left">
                         <thead>
                             <tr className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 bg-white">
@@ -660,7 +746,7 @@ function AdminDashboard({ activeTab: parentActiveTab, setActiveRoute, setSelecte
         <div className="min-h-screen bg-slate-50/20 font-sans">
             <main className="max-w-[1600px] mx-auto p-4 lg:p-10">
                 {activeTab === 'dashboard' && renderDashboard()}
-                {activeTab === 'orders' && renderOrders()}
+                {(activeTab === 'orders' || activeTab === 'manifests' || activeTab === 'pickups') && renderOrders()}
                 {activeTab === 'users' && renderUsers()}
                 {activeTab === 'kyc' && <AdminKycPage />}
             </main>
@@ -670,7 +756,13 @@ function AdminDashboard({ activeTab: parentActiveTab, setActiveRoute, setSelecte
             )}
 
             {showEditModal && editingOrder && (
-                <AddOrderModal isOpen={showEditModal} onClose={() => setShowEditModal(false)} editOrder={editingOrder} refreshOrders={fetchInitialData} />
+                <AddOrderModal
+                    user={user}
+                    onClose={() => setShowEditModal(false)}
+                    editOrder={editingOrder}
+                    refreshOrders={fetchInitialData}
+                    onSuccess={fetchInitialData}
+                />
             )}
 
             {showUserEditModal && editingUser && (

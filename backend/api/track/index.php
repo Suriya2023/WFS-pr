@@ -2,7 +2,7 @@
 // backend/api/track/index.php
 require_once '../../config.php';
 
-$trackingId = $_GET['id'] ?? '';
+$trackingId = isset($_GET['id']) ? $_GET['id'] : '';
 
 if (empty($trackingId)) {
     sendResponse(["message" => "Tracking ID required"], 400);
@@ -68,7 +68,7 @@ try {
         "trackingId" => $shipment['tracking_id'] ?: "ORD-" . $shipment['id'],
         "orderId" => "ORD-" . $shipment['id'],
         "status" => $shipment['status'],
-        "courierPartner" => strtoupper($shipment['courierPartner'] ?: "BGL PREMIUM"),
+        "courierPartner" => strtoupper($shipment['courierPartner'] ?: "WFS PREMIUM"),
         "origin" => [
             "city" => "Warehouse Node",
             "pincode" => "MANIFEST NODE"
@@ -112,7 +112,7 @@ try {
             "label" => "Shipment Received",
             "completed" => true,
             "timestamp" => $shipment['created_at'],
-            "location" => "BGL System"
+            "location" => "WFS System"
         ];
     }
 
