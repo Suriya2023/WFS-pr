@@ -14,8 +14,14 @@ $userId = $tokenData['id'];
 if ($method == 'GET') {
     // List addresses
     try {
-        $stmt = $pdo->prepare("SELECT * FROM user_addresses WHERE user_id = ? ORDER BY isDefault DESC, created_at DESC");
+        $stmt = $pdo->prepare("SELECT role FROM users WHERE id = ?");
         $stmt->execute([$userId]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        $targetUserId = ($user && $user['role'] === 'admin' && isset($_GET['user_id'])) ? $_GET['user_id'] : $userId;
+
+        $stmt = $pdo->prepare("SELECT * FROM user_addresses WHERE user_id = ? ORDER BY isDefault DESC, created_at DESC");
+        $stmt->execute([$targetUserId]);
         $addresses = $stmt->fetchAll(PDO::FETCH_ASSOC);
         sendResponse(true, "Addresses fetched", $addresses);
     } catch (PDOException $e) {

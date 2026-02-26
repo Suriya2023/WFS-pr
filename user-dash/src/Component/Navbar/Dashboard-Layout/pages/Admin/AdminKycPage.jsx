@@ -95,16 +95,25 @@ function AdminKycPage() {
 
     const filteredList = kycList.filter(kyc => {
         const matchesTab = activeTab === 'all' || kyc.status === activeTab;
-        const matchesSearch = (kyc.fullName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (kyc.user?.email || '').toLowerCase().includes(searchQuery.toLowerCase());
+        const searchVal = searchQuery.toLowerCase();
+        const matchesSearch =
+            (kyc.fullName || '').toLowerCase().includes(searchVal) ||
+            (kyc.user?.email || '').toLowerCase().includes(searchVal) ||
+            (kyc.user?.mobile || '').toLowerCase().includes(searchVal);
         return matchesTab && matchesSearch;
     });
+
+    const scrollbarStyle = {
+        msOverflowStyle: 'none',
+        scrollbarWidth: 'none',
+    };
 
     const counts = {
         all: kycList.length,
         pending: kycList.filter(k => k.status === 'pending').length,
         verified: kycList.filter(k => k.status === 'verified').length,
-        rejected: kycList.filter(k => k.status === 'rejected').length
+        rejected: kycList.filter(k => k.status === 'rejected').length,
+        not_submitted: kycList.filter(k => k.status === 'not_submitted').length
     };
 
     const ImageCard = ({ label, src }) => {
@@ -142,6 +151,10 @@ function AdminKycPage() {
 
     return (
         <div className="min-h-screen bg-[#FDF7F4] p-8 lg:p-12">
+            <style>{`
+                .scrollbar-hide::-webkit-scrollbar { display: none; }
+                .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+            `}</style>
             <div className="max-w-[1500px] mx-auto space-y-10">
                 {/* Header Section */}
                 <div>
@@ -151,18 +164,18 @@ function AdminKycPage() {
 
                 {/* Tabs & Stats */}
                 <div className="flex flex-wrap items-center justify-between gap-6">
-                    <div className="flex gap-4 p-1.5 bg-white rounded-[24px] shadow-sm border border-gray-100">
-                        {['all', 'pending', 'verified', 'rejected'].map((tab) => (
+                    <div style={scrollbarStyle} className="flex gap-3 p-1.5 bg-white rounded-[24px] shadow-sm border border-gray-100 overflow-x-auto scrollbar-hide">
+                        {['all', 'pending', 'verified', 'rejected', 'not_submitted'].map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
-                                className={`px-8 py-3 rounded-[18px] text-sm font-black uppercase tracking-widest transition-all flex items-center gap-3 ${activeTab === tab
+                                className={`px-6 py-3 rounded-[18px] text-[11px] font-black uppercase tracking-widest transition-all flex items-center gap-3 whitespace-nowrap ${activeTab === tab
                                     ? 'bg-[#2563EB] text-white shadow-lg shadow-blue-200'
                                     : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
                                     }`}
                             >
-                                {tab}
-                                <span className={`px-2 py-0.5 rounded-lg text-[10px] ${activeTab === tab ? 'bg-white/20' : 'bg-gray-100'}`}>
+                                {tab.replace('_', ' ')}
+                                <span className={`px-2 py-0.5 rounded-lg text-[10px] ${activeTab === tab ? 'bg-white/20' : 'bg-gray-100 font-bold'}`}>
                                     {counts[tab]}
                                 </span>
                             </button>
@@ -173,18 +186,18 @@ function AdminKycPage() {
                         <Search className="w-5 h-5 text-gray-400" />
                         <input
                             type="text"
-                            placeholder="Search by name or email..."
+                            placeholder="Search by name, email or mobile..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="bg-transparent border-none focus:ring-0 text-sm font-bold w-full"
+                            className="bg-transparent border-none focus:ring-0 text-sm font-bold w-full placeholder:text-gray-300"
                         />
                     </div>
                 </div>
 
                 {/* Main Table */}
                 <div className="bg-white rounded-[40px] shadow-2xl shadow-[#1A2B4B]/5 border border-white/50 overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
+                    <div style={scrollbarStyle} className="overflow-x-auto scrollbar-hide">
+                        <table className="w-full text-left border-collapse min-w-[1000px]">
                             <thead>
                                 <tr className="border-b border-gray-50">
                                     <th className="px-10 py-8 text-[11px] font-black text-gray-400 uppercase tracking-[0.2em]">Customer</th>
@@ -205,7 +218,7 @@ function AdminKycPage() {
                                             </div>
                                         </td>
                                     </tr>
-                                ) : filteredList.length === 0 ? (
+                                ) : (filteredList.length === 0) ? (
                                     <tr>
                                         <td colSpan="6" className="py-32 text-center">
                                             <div className="w-20 h-20 bg-gray-50 rounded-[30px] flex items-center justify-center mx-auto mb-4">
@@ -235,8 +248,12 @@ function AdminKycPage() {
                                             </td>
                                             <td className="px-10 py-7">
                                                 <div className="space-y-1">
-                                                    <p className="text-[13px] font-black text-gray-700 uppercase tracking-tight">{(kyc.addressDetails || 'Surat, Gujarat').split(',')[0].toUpperCase()}</p>
-                                                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest opacity-60">{(kyc.addressDetails || '395004').split(',').pop()}</p>
+                                                    <p className="text-[12px] font-black text-gray-700 uppercase tracking-tight max-w-[200px] truncate">
+                                                        {kyc.addressDetails || 'Address Not Provided'}
+                                                    </p>
+                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest opacity-60">
+                                                        {kyc.user?.mobile || 'No Mobile'}
+                                                    </p>
                                                 </div>
                                             </td>
                                             <td className="px-10 py-7">
@@ -244,17 +261,23 @@ function AdminKycPage() {
                                                     ? 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100'
                                                     : kyc.status === 'pending'
                                                         ? 'bg-amber-50 text-amber-600 ring-1 ring-amber-100'
-                                                        : 'bg-red-50 text-red-600 ring-1 ring-red-100'
+                                                        : kyc.status === 'rejected'
+                                                            ? 'bg-red-50 text-red-600 ring-1 ring-red-100'
+                                                            : 'bg-gray-100 text-gray-400'
                                                     }`}>
-                                                    <div className={`w-1.5 h-1.5 rounded-full ${kyc.status === 'verified' ? 'bg-emerald-500' : kyc.status === 'pending' ? 'bg-amber-500' : 'bg-red-500'}`} />
-                                                    {kyc.status}
+                                                    <div className={`w-1.5 h-1.5 rounded-full ${kyc.status === 'verified' ? 'bg-emerald-500' : kyc.status === 'pending' ? 'bg-amber-500' : kyc.status === 'rejected' ? 'bg-red-500' : 'bg-gray-300'}`} />
+                                                    {kyc.status.replace('_', ' ')}
                                                 </span>
                                             </td>
                                             <td className="px-10 py-7">
-                                                <div className="space-y-0.5">
-                                                    <p className="text-[13px] font-black text-gray-700 uppercase">{new Date(kyc.submittedAt).toLocaleDateString()}</p>
-                                                    <p className="text-[11px] font-bold text-gray-400 uppercase opacity-60">{new Date(kyc.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                                                </div>
+                                                {kyc.submittedAt ? (
+                                                    <div className="space-y-0.5">
+                                                        <p className="text-[13px] font-black text-gray-700 uppercase">{new Date(kyc.submittedAt).toLocaleDateString()}</p>
+                                                        <p className="text-[11px] font-bold text-gray-400 uppercase opacity-60">{new Date(kyc.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest italic">Not Applied</span>
+                                                )}
                                             </td>
                                             <td className="px-10 py-7 text-right">
                                                 <div className="flex items-center justify-end gap-3">

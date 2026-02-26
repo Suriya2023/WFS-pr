@@ -458,10 +458,73 @@ function AddOrderModal({ onClose, onSuccess, setActiveRoute, user, editOrder, ad
         setCurrentItem(prev => ({ ...prev, [name]: value }));
     };
 
+    const removeImage = (idx) => {
+        setCurrentItem(prev => {
+            const newPreviews = [...prev.imagePreviews];
+            newPreviews.splice(idx, 1);
+
+            const newFiles = [...prev.imageFiles];
+            if (idx < newFiles.length) {
+                newFiles.splice(idx, 1);
+            }
+
+            const newImages = [...prev.images];
+            // If it's an existing image url (not a new file preview)
+            if (idx >= newFiles.length && idx < newFiles.length + newImages.length) {
+                newImages.splice(idx - newFiles.length, 1);
+            }
+
+            return {
+                ...prev,
+                imagePreviews: newPreviews,
+                imageFiles: newFiles,
+                images: newImages
+            };
+        });
+    };
+
     const stepProps = {
         formData, setFormData, handleChange, handleItemChange, errors, setErrors, addresses, kycAddress, currentItem, setCurrentItem,
-        handleImageChange, addItem, removeItem: (i) => setFormData(p => ({ ...p, items: p.items.filter((_, idx) => idx !== i) })),
-        editItem: (i) => { const itm = formData.items[i]; setCurrentItem({ ...itm, imageFiles: [], imagePreviews: itm.images }); setFormData(p => ({ ...p, items: p.items.filter((_, idx) => idx !== i) })); },
+        handleImageChange,
+        removeImage,
+        addItem: (options = {}) => {
+            if (options.cancelEdit) {
+                setCurrentItem({ name: '', quantity: 1, weight: '', value: '', length: '', breadth: '', height: '', hsCode: '', productType: '', category: 'General', images: [], imageFiles: [], imagePreviews: [], isEditing: false, editIndex: null });
+                return;
+            }
+
+            if (currentItem.isEditing && currentItem.editIndex !== null) {
+                // Determine missing required item info logic without returning
+                if (!currentItem.name || !currentItem.weight || !currentItem.value) return alert('Fill core item details');
+                if (currentItem.imageFiles.length + currentItem.images.length < 2) return alert('Min 2 photos required');
+
+                uploadImages().then(res => {
+                    if (!res.success) return;
+                    let urls = [...currentItem.images, ...res.urls];
+                    setFormData(p => {
+                        const newItems = [...p.items];
+                        newItems[currentItem.editIndex] = { ...currentItem, images: urls };
+                        return { ...p, items: newItems };
+                    });
+                    setCurrentItem({ name: '', quantity: 1, weight: '', value: '', length: '', breadth: '', height: '', hsCode: '', productType: '', category: 'General', images: [], imageFiles: [], imagePreviews: [], isEditing: false, editIndex: null });
+                });
+            } else {
+                addItem();
+            }
+        },
+        removeItem: (i) => setFormData(p => ({ ...p, items: p.items.filter((_, idx) => idx !== i) })),
+        editItem: (i) => {
+            const itm = formData.items[i];
+            setCurrentItem({
+                ...itm,
+                imageFiles: [],
+                imagePreviews: itm.images || [],
+                images: itm.images || [],
+                isEditing: true,
+                editIndex: i
+            });
+            // Do NOT remove item from list immediately when editing, update it later or clear if canceled
+        },
         calculatingRate, rateCalculation, selectedRate, setSelectedRate, loading, loadingLater, processingPayment, handleSubmit, walletBalance,
         states, cities, pickupStates, pickupCities, pincodeLoading, handlePincodeLookup, setCurrentStep, handleSelectRate, onClose
     };
@@ -569,10 +632,29 @@ function AddOrderModal({ onClose, onSuccess, setActiveRoute, user, editOrder, ad
                                             </button>
                                         )}
                                         <div className="flex-1" />
-                                        <button onClick={() => currentStep < 4 ? setCurrentStep(currentStep + 1) : handleSubmit()} className="px-16 py-5 bg-red-600 text-white rounded-3xl text-[10px] font-semibold uppercase tracking-widest hover:bg-black hover:shadow-2xl hover:shadow-red-900/40 transition-all flex items-center gap-4 group">
-                                            Next Sequence
-                                            <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                                        </button>
+                                        <div className="flex items-center gap-4">
+                                            {/* Save Button — for quick save without payment flow */}
+                                            {editOrder && formData.items.length > 0 && (
+                                                <button
+                                                    onClick={() => {
+                                                        if (!selectedRate) {
+                                                            // Auto-set a default rate if not selected
+                                                            setSelectedRate({ tierName: editOrder.courierPartner || 'Express', estimatedCost: parseFloat(editOrder.shippingCost || 0), price: parseFloat(editOrder.shippingCost || 0) });
+                                                        }
+                                                        setTimeout(() => handleSubmit(null, 'PayLater'), 100);
+                                                    }}
+                                                    disabled={loading || loadingLater}
+                                                    className="px-12 py-5 bg-emerald-600 text-white rounded-3xl text-[10px] font-semibold uppercase tracking-widest hover:bg-emerald-700 hover:shadow-2xl hover:shadow-emerald-900/30 transition-all flex items-center gap-3 group shadow-lg shadow-emerald-200 disabled:opacity-50"
+                                                >
+                                                    {loadingLater ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle className="w-5 h-5" />}
+                                                    Save Order
+                                                </button>
+                                            )}
+                                            <button onClick={() => currentStep < 4 ? setCurrentStep(currentStep + 1) : handleSubmit()} className="px-16 py-5 bg-red-600 text-white rounded-3xl text-[10px] font-semibold uppercase tracking-widest hover:bg-black hover:shadow-2xl hover:shadow-red-900/40 transition-all flex items-center gap-4 group">
+                                                Next Sequence
+                                                <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
                             </div>

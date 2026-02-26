@@ -29,10 +29,11 @@ try {
             $firstname = $input['firstname'] ?? '';
             $lastname = $input['lastname'] ?? '';
             $email = $input['email'] ?? '';
+            $phone = $input['phone'] ?? '';
             $wallet_balance = $input['wallet_balance'] ?? 0;
 
-            $update = $pdo->prepare("UPDATE users SET firstname = ?, lastname = ?, email = ?, wallet_balance = ? WHERE id = ?");
-            $update->execute([$firstname, $lastname, $email, $wallet_balance, $userId]);
+            $update = $pdo->prepare("UPDATE users SET firstname = ?, lastname = ?, email = ?, phone = ?, wallet_balance = ? WHERE id = ?");
+            $update->execute([$firstname, $lastname, $email, $phone, $wallet_balance, $userId]);
             sendResponse(["success" => true, "message" => "User updated successfully"]);
             exit;
         }
@@ -49,7 +50,7 @@ try {
     }
 
     // Default GET: Return all users
-    $stmt = $pdo->prepare("SELECT id, firstname, lastname, email, role, kyc_status, is_blocked, wallet_balance, created_at FROM users WHERE role != 'admin' ORDER BY created_at DESC");
+    $stmt = $pdo->prepare("SELECT id, firstname, lastname, email, role, kyc_status, is_blocked, wallet_balance, created_at, phone, mobile FROM users WHERE role != 'admin' ORDER BY created_at DESC");
     $stmt->execute();
     sendResponse($stmt->fetchAll());
 

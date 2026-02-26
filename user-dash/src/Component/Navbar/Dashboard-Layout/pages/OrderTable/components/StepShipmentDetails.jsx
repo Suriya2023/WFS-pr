@@ -158,9 +158,19 @@ const StepShipmentDetails = ({
                     </div>
                 </div>
 
-                <div className="pt-4 flex justify-end">
+                <div className="pt-4 flex justify-end gap-4">
+                    {currentItem.isEditing && (
+                        <button onClick={() => {
+                            // Reset current item back to empty if we cancel edit
+                            handleItemChange({ target: { name: 'isEditing', value: false } }); // Just to trigger a re-render if needed, though strictly it's controlled by parent usually.
+                            addItem({ cancelEdit: true }); // Pass a flag to addItem if you want to handle cancel specifically in parent, or just clear the form. 
+                        }} className="px-10 py-4 bg-slate-100 text-slate-500 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-slate-200 transition-all font-sans active:scale-95">
+                            Cancel
+                        </button>
+                    )}
                     <button onClick={addItem} className="px-10 py-4 bg-slate-900 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-all shadow-lg flex items-center gap-3 active:scale-95">
-                        <Plus className="w-4 h-4" /> Add Item
+                        {currentItem.isEditing ? <Edit className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                        {currentItem.isEditing ? 'Update Item' : 'Add Item'}
                     </button>
                 </div>
             </div>

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import AdminKycPage from './AdminKycPage';
 import AddOrderModal from '../OrderTable/AddOrderModal';
+import CustomerDetailsModal from './CustomerDetailsModal';
 
 function AdminDashboard({ activeTab: parentActiveTab, setActiveRoute, setSelectedOrderId }) {
     const [stats, setStats] = useState({
@@ -85,18 +86,21 @@ function AdminDashboard({ activeTab: parentActiveTab, setActiveRoute, setSelecte
                 axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/admin/analytics.php`, config).catch(e => ({ data: {} })),
                 axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/shipment/list.php?all=true`, config).catch(e => ({ data: [] }))
             ]);
+
+            const allShipments = shipmentsRes.data || [];
+
             setUsers(usersRes.data || []);
             setStats({
                 totalUsers: usersRes.data?.length || 0,
-                totalShipments: shipmentsRes.data?.length || 0,
+                totalShipments: allShipments.length,
                 pendingKYCs: pendingRes.data?.length || 0,
-                csbOrders: analyticsRes.data?.csbOrders || 0,
-                totalManifests: analyticsRes.data?.totalManifests || 0,
-                activePickups: analyticsRes.data?.activePickups || 0,
-                dispatchedOrders: analyticsRes.data?.dispatchedOrders || 0,
-                disputedOrders: analyticsRes.data?.disputedOrders || 0
+                csbOrders: allShipments.filter(s => s.destination_country && s.destination_country.toLowerCase() !== 'india').length,
+                totalManifests: allShipments.filter(s => s.status === 'manifested').length,
+                activePickups: allShipments.filter(s => s.status === 'picked_up').length,
+                dispatchedOrders: allShipments.filter(s => s.status === 'dispatched' || s.status === 'in_transit').length,
+                disputedOrders: allShipments.filter(s => s.status === 'cancelled' || s.status === 'disputed').length
             });
-            setShipments(shipmentsRes.data || []);
+            setShipments(allShipments);
         } catch (error) { console.error('Error:', error); }
         finally { setLoading(false); }
     };
@@ -570,30 +574,59 @@ function AdminDashboard({ activeTab: parentActiveTab, setActiveRoute, setSelecte
     const renderUsers = () => {
         const filteredUsers = users.filter(u => u.firstname?.toLowerCase().includes(customerSearch.toLowerCase()) || u.email?.toLowerCase().includes(customerSearch.toLowerCase()));
         return (
-            <div className="bg-white rounded-[40px] border border-slate-100 shadow-sm overflow-hidden animate-in fade-in duration-700 m-6">
-                <div className="px-12 py-10 border-b border-slate-50 flex items-center justify-between">
-                    <h2 className="text-xl font-black text-slate-950 uppercase tracking-tight">Active Nodes</h2>
-                    <input type="text" placeholder="Search Node..." value={customerSearch} onChange={e => setCustomerSearch(e.target.value)} className="bg-slate-50 border border-slate-100 rounded-xl px-6 py-3 text-xs font-bold outline-none w-72" />
+            <div className="animate-in fade-in duration-700 m-6">
+                <div className="flex items-center gap-4 mb-6">
+                    <div className="relative flex-1 bg-white border border-gray-100 rounded-xl max-w-2xl px-4 py-3 flex items-center shadow-sm">
+                        <Search className="w-4 h-4 text-gray-400 mr-3 shrink-0" />
+                        <input
+                            type="text"
+                            placeholder="Search Customer..."
+                            value={customerSearch}
+                            onChange={e => setCustomerSearch(e.target.value)}
+                            className="bg-transparent text-sm font-medium outline-none w-full text-gray-900 placeholder-gray-400"
+                        />
+                    </div>
+                    <button className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 text-gray-700 font-bold text-sm rounded-xl hover:bg-gray-50 transition shadow-sm">
+                        <Filter className="w-4 h-4" />
+                        Filters
+                    </button>
+                    <button className="flex items-center gap-2 px-6 py-3 bg-[#1e40af] text-white font-bold text-sm rounded-xl hover:bg-blue-800 transition shadow-sm">
+                        + Add New
+                    </button>
                 </div>
-                <div className="overflow-x-auto min-h-[600px]">
+
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-x-auto min-h-[600px]">
                     <table className="w-full text-left">
                         <thead>
-                            <tr className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-50 bg-slate-50/20">
-                                <th className="px-12 py-8">Identity</th>
-                                <th className="px-12 py-8">Network Auth</th>
-                                <th className="px-12 py-8">Capital</th>
-                                <th className="px-12 py-8">KYC Status</th>
-                                <th className="px-12 py-8 text-center">Protocol</th>
+                            <tr className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 bg-white">
+                                <th className="px-8 py-5">CUSTOMER</th>
+                                <th className="px-8 py-5">DETAILS</th>
+                                <th className="px-8 py-5">ONBOARDING</th>
+                                <th className="px-8 py-5">KYC STATUS</th>
+                                <th className="px-8 py-5 text-center">ACTIONS</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-50">
+                        <tbody className="divide-y divide-gray-50">
                             {filteredUsers.map(u => (
-                                <tr key={u.id} className="hover:bg-slate-50/30 transition-colors group relative">
-                                    <td className="px-12 py-8"><p className="text-sm font-black text-slate-900 uppercase">{u.firstname} {u.lastname}</p><p className="text-[10px] text-slate-300 font-bold mt-1">UUID: {u.id}</p></td>
-                                    <td className="px-12 py-8"><p className="text-sm font-black text-slate-900">{u.email}</p><p className="text-[10px] text-slate-300 font-bold mt-1">{u.phone || 'N/A'}</p></td>
-                                    <td className="px-12 py-8"><p className="text-sm font-black text-slate-900">₹ {parseFloat(u.wallet_balance || 0).toLocaleString()}</p></td>
-                                    <td className="px-12 py-8"><span className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest ${u.kyc_status === 'verified' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{u.kyc_status || 'Pending'}</span></td>
-                                    <td className="px-12 py-8 text-center relative">
+                                <tr key={u.id} className="hover:bg-gray-50/50 transition-colors group relative bg-white">
+                                    <td className="px-8 py-5">
+                                        <p className="text-sm font-black text-gray-900">{u.firstname} {u.lastname || ''}</p>
+                                        <p className="text-[11px] text-gray-500 font-medium mt-1">{u.email}</p>
+                                    </td>
+                                    <td className="px-8 py-5">
+                                        <p className="text-sm font-black text-gray-900">{u.phone || 'N/A'}</p>
+                                        <p className="text-[11px] text-gray-400 font-semibold mt-1 uppercase">BGL ID: {u.id.toString().padStart(8, '0')}</p>
+                                    </td>
+                                    <td className="px-8 py-5">
+                                        <p className="text-sm font-black text-gray-900">{u.created_at ? new Date(u.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</p>
+                                        <p className="text-[11px] text-gray-400 font-semibold mt-1 uppercase">{u.created_at ? new Date(u.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : ''}</p>
+                                    </td>
+                                    <td className="px-8 py-5">
+                                        <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${u.kyc_status === 'verified' ? 'border-green-200 text-green-600 bg-white' : 'border-gray-200 text-gray-500 bg-white'}`}>
+                                            {u.kyc_status || 'NOT_SUBMITTED'}
+                                        </span>
+                                    </td>
+                                    <td className="px-8 py-5 text-center relative">
                                         <button
                                             onClick={(e) => {
                                                 const rect = e.currentTarget.getBoundingClientRect();
@@ -602,8 +635,8 @@ function AdminDashboard({ activeTab: parentActiveTab, setActiveRoute, setSelecte
                                                 setMenuPosition({ top, right: 16 });
                                                 setActiveActionMenu({ id: u.id, type: 'user' });
                                             }}
-                                            className={`p-2.5 rounded-full transition-all ${activeActionMenu?.id === u.id && activeActionMenu?.type === 'user'
-                                                ? 'bg-slate-900 text-white' : 'text-slate-300'
+                                            className={`p-2 rounded-lg border transition-all ${activeActionMenu?.id === u.id && activeActionMenu?.type === 'user'
+                                                ? 'bg-gray-100 border-gray-200 text-gray-900' : 'border-transparent text-gray-300 hover:border-gray-200 hover:bg-gray-50 hover:text-gray-500'
                                                 }`}>
                                             <MoreVertical className="w-4 h-4" />
                                         </button>
@@ -633,19 +666,7 @@ function AdminDashboard({ activeTab: parentActiveTab, setActiveRoute, setSelecte
             </main>
 
             {showUserModal && selectedUser && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-md bg-black/40">
-                    <div className="bg-white rounded-[48px] p-12 max-w-2xl w-full shadow-2xl relative animate-in zoom-in duration-300">
-                        <button onClick={() => setShowUserModal(false)} className="absolute top-10 right-10 p-3 bg-slate-50 text-slate-400 rounded-2xl hover:bg-slate-900 hover:text-white transition-all"><X className="w-6 h-6" /></button>
-                        <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tight mb-8">Node Profile</h2>
-                        <div className="grid grid-cols-2 gap-8">
-                            <div className="p-8 bg-slate-50 rounded-[32px]"><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Operator</p><p className="text-xl font-black text-slate-900 uppercase">{selectedUser.firstname} {selectedUser.lastname}</p></div>
-                            <div className="p-8 bg-slate-50 rounded-[32px]"><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Network Auth</p><p className="text-lg font-black text-slate-900">{selectedUser.email}</p></div>
-                            <div className="p-8 bg-slate-50 rounded-[32px]"><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Contact Hub</p><p className="text-lg font-black text-slate-900">{selectedUser.phone || 'N/A'}</p></div>
-                            <div className="p-8 bg-slate-50 rounded-[32px]"><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Liquid Balance</p><p className="text-xl font-black text-blue-600 tracking-tight">₹ {parseFloat(selectedUser.wallet_balance || 0).toLocaleString()}</p></div>
-                            <div className="p-8 bg-slate-50 rounded-[32px]"><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Security Clearance</p><span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${selectedUser.kyc_status === 'verified' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{selectedUser.kyc_status || 'Pending'}</span></div>
-                        </div>
-                    </div>
-                </div>
+                <CustomerDetailsModal selectedUser={selectedUser} setSelectedUser={(u) => { setSelectedUser(u); if (!u) setShowUserModal(false); }} />
             )}
 
             {showEditModal && editingOrder && (

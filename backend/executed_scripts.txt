@@ -1,0 +1,8 @@
+1. master_schema.sql (Yeh sabse main file hai, jisme sabhi purani tables DROP hoke nayi banengi jisme pending_users wagera sab shamil hain)
+2. migrate_v2.php (Ye shipments table me additional fields add karega)
+3. migrate_v3.php (Ye invoice series aur kuch extra tracking fields add karega)
+4. migrate_v4.php (Data types ya choti changes karta hai)
+5. migrate_v6.php (Column sizes ko bada karega)
+6. migrate_v7.php (Recent DB fields aur fixes apply karega)
+
+In sabko ek sath line-by-line chalane ke liye maine ek "run_all_scripts.php" naam ki file run ki hai jo pehle pura database DROP karke upar di gayi sari scripts ek ke baad ek chala rahi hai taaki schema ekdum fresh aur error-free set ho jaye.
